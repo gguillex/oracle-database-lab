@@ -2,4 +2,5 @@
 Training repository for Oracle Database administration, testing, change management and Git workflows.
 Name: Guillermo Garcia Andugar
 Professor: Richard Aviles Lopez
-test
+see CONTRIBUTING.md for branch and commit conventions.
+
