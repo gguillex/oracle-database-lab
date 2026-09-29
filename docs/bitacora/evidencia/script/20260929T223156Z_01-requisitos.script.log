@@ -1,0 +1,32 @@
+== Sistema operativo y arquitectura ==
+Linux
+x86_64
+PRETTY_NAME="Ubuntu 26.04.1 LTS"
+
+== Shell por defecto ==
+/bin/bash
+
+== Espacio libre en disco (unidad del repositorio) ==
+S.ficheros     Tamaño Usados  Disp Uso% Montado en
+/dev/nvme0n1p2   468G    42G  403G  10% /
+
+== Memoria disponible para Linux y Docker ==
+               total       usado       libre  compartido   búf/caché  disponible
+Mem:            30Gi       3,9Gi        23Gi       841Mi       4,3Gi        26Gi
+Inter:         8,0Gi          0B       8,0Gi
+
+== Herramientas de trabajo (Parte 0) ==
+OK git
+OK gh
+OK curl
+OK wget
+OK unzip
+OK jq
+OK tree
+OK htop
+OK tmux
+OK shellcheck
+
+== Git ==
+git version 2.53.0
+gguillegarciaa@gmail.com
