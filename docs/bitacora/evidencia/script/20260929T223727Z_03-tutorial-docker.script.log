@@ -1,0 +1,181 @@
+Script iniciado en 2026-09-30 00:37:27+02:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="118" LINES="43"]
+[?2004h[1;32mguillermo@Guillermo-Portatil[0m [1;34m~/oracle-database-lab[0m [1;35m(chore/3-install-oracle-environment)[0m
+$ [7mdocker version[27m
+[7mdocker info[27m
+[7mdocker run hello-world[27m
+[7mdocker ps[27m
+[7mdocker ps -a[27m
+[7mdocker pull alpine:3.20[27m
+[7mdocker images[27m[A[A[A[A[A[A[C[Cdocker version
+docker info
+docker run hello-world
+docker ps
+docker ps -a
+docker pull alpine:3.20
+docker images
+[?2004lClient: Docker Engine - Community
+ Version:           29.8.1
+ API version:       1.56
+ Go version:        go1.26.8
+ Git commit:        4a63305
+ Built:             Tue Sep 15 16:25:42 2026
+ OS/Arch:           linux/amd64
+ Context:           default
+
+Server: Docker Engine - Community
+ Engine:
+  Version:          29.8.1
+  API version:      1.56 (minimum version 1.40)
+  Go version:       go1.26.8
+  Git commit:       464cd50
+  Built:            Tue Sep 15 16:25:42 2026
+  OS/Arch:          linux/amd64
+  Experimental:     false
+ containerd:
+  Version:          v2.3.6
+  GitCommit:        ee2735368117d2eb259779949d5e75cdafec9761
+ runc:
+  Version:          1.5.1
+  GitCommit:        v1.5.1-0-g8f2685a4
+ docker-init:
+  Version:          0.19.0
+  GitCommit:        de40ad0
+Client: Docker Engine - Community
+ Version:    29.8.1
+ Context:    default
+ Debug Mode: false
+ Plugins:
+  buildx: Docker Buildx (Docker Inc.)
+    Version:  v0.37.1
+    Path:     /usr/libexec/docker/cli-plugins/docker-buildx
+  compose: Docker Compose (Docker Inc.)
+    Version:  v5.5.1
+    Path:     /usr/libexec/docker/cli-plugins/docker-compose
+
+Server:
+ Containers: 0
+  Running: 0
+  Paused: 0
+  Stopped: 0
+ Images: 2
+ Server Version: 29.8.1
+ Storage Driver: overlayfs
+  driver-type: io.containerd.snapshotter.v1
+ Logging Driver: json-file
+ Cgroup Driver: systemd
+ Cgroup Version: 2
+ Plugins:
+  Volume: local
+  Network: bridge host ipvlan macvlan null overlay
+  Log: awslogs fluentd gcplogs gelf journald json-file local splunk syslog
+ CDI spec directories:
+  /etc/cdi
+  /var/run/cdi
+ Swarm: inactive
+ Runtimes: io.containerd.runc.v2 runc
+ Default Runtime: runc
+ Init Binary: docker-init
+ containerd version: ee2735368117d2eb259779949d5e75cdafec9761
+ runc version: v1.5.1-0-g8f2685a4
+ init version: de40ad0
+ Security Options:
+  apparmor
+   Profile: default
+  seccomp
+   Profile: builtin
+  cgroupns
+ Kernel Version: 7.0.0-34-generic
+ Operating System: Ubuntu 26.04.1 LTS
+ OSType: linux
+ Architecture: x86_64
+ CPUs: 16
+ Total Memory: 30.54GiB
+ Name: Guillermo-Portatil
+ ID: e9a3ab19-4872-478a-90c1-62daa3c8f0f2
+ Docker Root Dir: /var/lib/docker
+ Debug Mode: false
+ Experimental: false
+ Insecure Registries:
+  127.0.0.0/8
+  ::1/128
+ Live Restore Enabled: false
+ Firewall Backend: iptables
+  EnableUserlandProxy: true
+  UserlandProxyPath: /usr/bin/docker-proxy
+
+
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+
+To generate this message, Docker took the following steps:
+ 1. The Docker client contacted the Docker daemon.
+ 2. The Docker daemon pulled the "hello-world" image from the Docker Hub.
+    (amd64)
+ 3. The Docker daemon created a new container from that image which runs the
+    executable that produces the output you are currently reading.
+ 4. The Docker daemon streamed that output to the Docker client, which sent it
+    to your terminal.
+
+To try something more ambitious, you can run an Ubuntu container with:
+ $ docker run -it ubuntu bash
+
+Share images, automate workflows, and more with a free Docker ID:
+ https://hub.docker.com/
+
+For more examples and ideas, visit:
+ https://docs.docker.com/get-started/
+
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+CONTAINER ID   IMAGE         COMMAND    CREATED                  STATUS                              PORTS     NAMES
+b073587ba2d7   hello-world   "/hello"   Less than a second ago   Exited (0) Less than a second ago             laughing_thompson
+3.20: Pulling from library/alpine
+
+[1A[2K25f1d6b1951a: Pulling fs layer [1B[1A[2K25f1d6b1951a: Download complete [1B[1A[2K25f1d6b1951a: Extracting 1 s[1B
+[1A[2Kd4050d56ebf2: Download complete [1B[2A[2K25f1d6b1951a: Pull complete [2B
+[1A[2K3a030ca3f633: Download complete [1BDigest: sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc
+Status: Downloaded newer image for alpine:3.20
+docker.io/library/alpine:3.20
+                                                                                                  [1m[106m[30mi[0m[0m [96mInfo → [0m[0m [38;5;0m[48;5;14m U [0m In Use
+[39m[1mIMAGE[0m                                                [39m[1mID[0m             [39m[1mDISK USAGE[0m   [39m[1mCONTENT SIZE[0m   [39m[1mEXTRA[0m
+[34m[1malpine:3.20[0m                                          [39md9e853e87e55[0m       [39m12.2MB[0m         [39m3.71MB[0m        
+[34m[1mcontainer-registry.oracle.com/database/free:latest[0m   [39mf988b0c04c4c[0m       [39m13.8GB[0m         [39m3.71GB[0m        
+[34m[1mhello-world:latest[0m                                   [39m5e2309035332[0m       [39m25.9kB[0m         [39m9.49kB[0m   [38;5;0m[48;5;14m U [0m  
+[?2004h[1;32mguillermo@Guillermo-Portatil[0m [1;34m~/oracle-database-lab[0m [1;35m(chore/3-install-oracle-environment)[0m
+$ [7mdocker run -it --name prueba alpine:3.20 sh[27m[C[Cdocker run -it --name prueba alpine:3.20 sh
+[?2004l/ # [6ncat /etc/os-release
+NAME="Alpine Linux"
+ID=alpine
+VERSION_ID=3.20.10
+PRETTY_NAME="Alpine Linux v3.20"
+HOME_URL="https://alpinelinux.org/"
+BUG_REPORT_URL="https://gitlab.alpinelinux.org/alpine/aports/-/issues"
+/ # hostname
+53afe78ae71a
+/ # exit
+[?2004h[1;32mguillermo@Guillermo-Portatil[0m [1;34m~/oracle-database-lab[0m [1;35m(chore/3-install-oracle-environment)[0m
+$ [7mdocker start -ai prueba[27m
+[7mecho "dato importante" > /tmp/nota.txt[27m
+[7mcat /tmp/nota.txt[27m
+[7mexit[27m
+[7mdocker rm prueba[27m
+[7mdocker run -it --name prueba2 alpine:3.20 sh[27m
+[7mcat /tmp/nota.txt[27m
+[7mexit[27m[A[A[A[A[A[A[Adocker start -ai prueba
+echo "dato importante" > /tmp/nota.txt
+cat /tmp/nota.txt
+exit
+docker rm prueba
+docker run -it --name prueba2 alpine:3.20 sh
+cat /tmp/nota.txt
+exit
+[?2004l/ # [6ndocker volume create datos-prueba
+sh: docker: not found
+/ # docker run -it --rm -v datos-prueba:/datos alpine:3.20 sh
+sh: docker: not found
+/ # echo "dato importante" > /datos/nota.txt
+sh: can't create /datos/nota.txt: nonexistent directory
+/ # exit
+dato importante
+exit
+
+Script terminado en 2026-09-30 00:41:06+02:00 [CÓDIGO_SALIDA_ORDEN="0"]
