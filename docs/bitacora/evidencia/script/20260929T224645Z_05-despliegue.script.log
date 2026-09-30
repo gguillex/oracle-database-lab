@@ -1,0 +1,9 @@
+== Creando volumen de persistencia ==
+oralab-26ai-data
+
+== Desplegando contenedor de Oracle ==
+97877662ed42760590800d14486f20d25d75bc9e734a0838ba81a5e93e57ed99
+
+== Estado inicial del contenedor ==
+CONTAINER ID   IMAGE                                                COMMAND                  CREATED         STATUS                                     PORTS                                         NAMES
+97877662ed42   container-registry.oracle.com/database/free:latest   "/bin/bash -c $SCRIP…"   2 seconds ago   Up Less than a second (health: starting)   0.0.0.0:1521->1521/tcp, [::]:1521->1521/tcp   oralab-26ai
