@@ -1,0 +1,59 @@
+== Esperando a que oralab-26ai este healthy (max. 5 min) ==
+  intento 1: starting
+  intento 2: starting
+  intento 3: starting
+  intento 4: healthy
+== Estado final ==
+oralab-26ai  Up 15 seconds (healthy)
+== Registro de arranque (docker logs) ==
+Starting Oracle Net Listener.
+Oracle Net Listener started.
+Starting Oracle AI Database instance FREE.
+Oracle AI Database instance FREE started.
+
+The Oracle base remains unchanged with value /opt/oracle
+
+SQL*Plus: Release 23.26.3.0.0 - Production on Sat Oct 3 12:16:00 2026
+Version 23.26.3.0.0
+
+Copyright (c) 1982, 2026, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle AI Database 26ai Free Release 23.26.3.0.0 - Develop, Learn, and Run for Free
+Version 23.26.3.0.0
+
+SQL> 
+User altered.
+
+SQL> 
+User altered.
+
+SQL> 
+Session altered.
+
+SQL> 
+User altered.
+
+SQL> Disconnected from Oracle AI Database 26ai Free Release 23.26.3.0.0 - Develop, Learn, and Run for Free
+Version 23.26.3.0.0
+#########################
+DATABASE IS READY TO USE!
+#########################
+The following output is now a tail of the alert.log:
+2026-10-03T12:15:59.943500+00:00
+replication_dependency_tracking turned off (no async multimaster replication found)
+Opening with Resource Manager plan: DEFAULT_CDB_PLAN 
+CLID: P
+PDB$SEED(2):Autotune of undo retention is turned on. 
+PDB$SEED(2):Opening pdb with Resource Manager plan: DEFAULT_PLAN
+FREEPDB1(3):Autotune of undo retention is turned on. 
+FREEPDB1(3):Opening pdb with Resource Manager plan: DEFAULT_PLAN
+Completed: Pluggable database FREEPDB1 opened read write 
+Completed: ALTER DATABASE OPEN
+2026-10-03T12:16:01.352418+00:00
+===========================================================
+Dumping current patch information
+===========================================================
+No patches have been applied
+===========================================================

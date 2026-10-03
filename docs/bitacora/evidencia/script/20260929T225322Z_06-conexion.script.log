@@ -1,9 +1,0 @@
-== Estado de salud del contenedor ==
-healthy
-
-== Prueba de conexión SQL ==
-
-NAME		OPEN_MODE
---------------- ---------------
-FREEPDB1	READ WRITE
-
