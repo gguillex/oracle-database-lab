@@ -7,7 +7,7 @@ set -a; source config/.env; set +a
 
 CONN="sys/${ORACLE_PWD}@localhost:1521/${SERVICE_PDB}"
 
-for MIG in V000_setup_entornos_negocio V001_create_esquemas_negocio; do
+for MIG in V000__setup_entornos_negocio V001__create_esquemas_negocio; do
     echo ">> Aplicando $MIG"
     LOG="$EVID/spool/$(ts)_08-$MIG.spool.log"
     if ! docker exec -i "$CONT_NAME" sqlplus -s "$CONN" as sysdba \
