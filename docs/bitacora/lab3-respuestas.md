@@ -5,75 +5,75 @@ Autor: Guillermo Garcia Andugar · Issue #3
 ## Docker
 
 **1. ¿Qué diferencia hay entre una imagen y un contenedor?**
-La imagen es una plantilla de solo lectura (por ejemplo `hello-world` o `alpine:3.20`) y el contenedor es una instancia en ejecución creada a partir de ella. En G2 la misma imagen `hello-world` generó un contenedor nuevo cada vez que hice `docker run`; en G4 `docker run -it --name prueba alpine:3.20 sh` creó un contenedor con su propio sistema de archivos, en el que pude entrar, mientras la imagen seguía intacta.
+La imagen es solo la plantilla base (tipo `hello-world` o `alpine`) y el contenedor es cuando ya la tienes corriendo. En la parte G2, hacer `docker run` me levantaba un contenedor nuevo de cero cada vez. En la G4 le metí un `sh` al final, me metí dentro a trastear y la imagen original ni se inmutó.
 
 **2. En G5 `nota.txt` desapareció y en G6 no. ¿Por qué?**
-En G5 el archivo se escribió en la capa de escritura del propio contenedor: al hacer `docker rm prueba` esa capa se borró con él, y `prueba2` arrancó limpio desde la imagen. En G6 se escribió en `/datos`, montado sobre el volumen con nombre `datos-prueba`, que vive fuera del ciclo de vida del contenedor; por eso el segundo contenedor encontró el dato.
+Porque en la G5 el archivo de texto se guardó en el propio contenedor. Al borrarlo con `docker rm`, me lo cargué y adiós muy buenas. En la G6 lo metí en un volumen externo (`datos-prueba`), así que cuando levanté el contenedor nuevo lo pilló sin problema.
 
 **3. `docker ps` vs `docker ps -a`; ¿qué significa `Exited (0)`?**
-`docker ps` solo lista los contenedores en marcha; `docker ps -a` lista todos, también los detenidos. `Exited (0)` indica que el proceso principal terminó correctamente (código 0); un código distinto de 0 significa que terminó con error.
+`docker ps` te enseña solo lo que está funcionando ahora mismo. Si le metes el `-a` ves absolutamente todo, hasta los contenedores parados. Lo de `Exited (0)` significa que el proceso terminó bien por su cuenta. Si tira otro número distinto de cero, es que algo ha cascado.
 
 **4. En `-p 8181:8181`, ¿qué número es de mi equipo y cuál del contenedor? ¿Qué pasaría con `-p 80:8080` en nginx?**
-El formato es `anfitrión:contenedor`: el primero es el puerto de mi equipo y el segundo el del contenedor. Con `-p 80:8080`, mi puerto 80 se reenviaría al 8080 del contenedor, pero nginx escucha en el 80, así que la página no cargaría.
+El de la izquierda es el puerto de mi máquina y el de la derecha el del contenedor. Si pongo `-p 80:8080` con nginx, le estoy enchufando mi puerto 80 al 8080 del contenedor. Como nginx escucha internamente en el 80 por defecto, la página no va a cargar en la vida.
 
 **5. ¿Por qué Oracle se queda en marcha y hello-world termina solo?**
-Un contenedor vive lo que vive su proceso principal. El de `hello-world` imprime un mensaje y termina; el de Oracle es el motor de base de datos, que se queda escuchando conexiones indefinidamente.
+Porque el contenedor vive lo que dure su proceso principal. El hello-world escupe el texto por pantalla y se muere al instante. Oracle es un motor de base de datos, así que se queda en segundo plano abierto escuchando conexiones.
 
 **6. ¿Qué es el digest y por qué lo registramos si usamos `:latest`?**
-El digest (`sha256:...`) es la huella exacta e inmutable de una imagen. `:latest` es una etiqueta móvil que apunta a versiones distintas con el tiempo; registrando el digest (evidencia 04) queda constancia de la versión exacta de Oracle que instalé.
+El digest es el identificador exacto e inmutable de una imagen (`sha256...`). El `:latest` es una etiqueta falsa que va cambiando con el tiempo. Me guardo el digest para saber exactamente qué versión instalé y que luego una actualización no me cambie la imagen por debajo y me rompa la práctica.
 
 **7. ¿Qué comando borraría de verdad los datos de Oracle? ¿Por qué `docker rm oralab-26ai` no lo hace?**
-`docker volume rm oralab-26ai-data` (o un `docker system prune --volumes` sin leer). Los datafiles están en el volumen con nombre montado en `/opt/oracle/oradata`, no dentro del contenedor; `docker rm` borra el contenedor pero no el volumen. De hecho, en este laboratorio recreé `oralab-26ai` y FREEPDB1 conservó los 5 esquemas.
+Con un `docker volume rm oralab-26ai-data`. El `docker rm` normal solo borra el contenedor de usar y tirar, pero los datafiles reales están en el volumen. De hecho borré el contenedor `oralab-26ai`, lo volví a crear y mi PDB y los cinco esquemas seguían ahí intactos.
 
 ## Git, organización y evidencia
 
 **8. ¿Por qué el laboratorio se hace en el repositorio, con Issue, branch y PR?**
-Para que la instalación sea reproducible, verificable y revisable: los scripts y la evidencia quedan versionados, otra persona revisa el cambio antes de llegar a `main` y cualquiera puede reconstruir el entorno. En una carpeta aparte el conocimiento solo viviría en mi máquina (un *snowflake server*).
+Para no tenerlo todo tirado en mi PC y que sea reproducible. Si lo meto en un Issue, una rama y tiro un PR, cualquiera puede clonarlo, ver la evidencia de los scripts y montar lo mismo. Si lo dejo en una carpeta suelta y mi máquina peta, lo pierdo todo.
 
 **9. `source 00-config.sh` vs `bash 00-config.sh`.**
-`bash` ejecuta el script en un proceso hijo: las variables desaparecen al terminar. `source` lo ejecuta en la shell actual, así que `CONT_NAME`, `EVID`, `ts`, etc. quedan disponibles para los comandos siguientes. Por eso las constantes se cargan con `source`.
+Si lo ejecutas con `bash`, te abre una consola hija nueva por debajo y al terminar pierdes las variables. Con `source` se lanza en tu misma terminal de trabajo, así que las variables como el nombre del contenedor o las fechas se te quedan en memoria para usarlas al instante en el siguiente comando.
 
 **10. Explica `20260915T091230Z_02-docker.script.log`.**
-`20260915T091230Z` es la marca de tiempo ISO 8601 en UTC (fecha, `T`, hora, `Z` = UTC); `02` es el número de paso; `docker` la descripción en kebab-case; `.script.log` indica que es una captura de terminal (frente a `.spool.log` de SQL o `.png` de captura).
+Lo primero es la fecha exacta en UTC. El `02` es el número del paso por el que voy. Lo de `docker` es la descripción, y `.script.log` es para saber de un vistazo que he capturado la salida de la terminal y no que es un spool de SQL.
 
 **11. ¿Para qué sirve `.gitattributes` y qué error evita?**
-Obliga a guardar `.sh`, `.sql` y `.md` con finales de línea LF. Evita que un script editado en Windows (CRLF) falle en Linux con errores como `$'\r': command not found` y que los diffs se llenen de cambios invisibles.
+Para forzar que todos los scripts se guarden con los saltos de línea de Linux (LF). Si los editas en Windows se te guardan en CRLF, y luego al intentar ejecutarlos en Linux te empiezan a salir errores absurdos de `command not found` por culpa de retornos de carro invisibles.
 
 **12. ¿Por qué *Create a merge commit* y no *Squash and merge*?**
-Porque cada commit corresponde a una Parte del laboratorio y tiene valor propio como registro de cuándo y cómo se verificó cada herramienta. Squash los aplastaría en uno solo y se perdería ese historial paso a paso.
+Porque quiero que cada paso se quede guardado por separado en el historial. Si le doy a Squash, me aplasta todo en un solo commit gigante y pierdo el rastro paso a paso de cómo fui configurando cada herramienta.
 
 ## Seguridad
 
 **13. Las cuatro capas de la estrategia de contraseñas.**
-1) Añadir `config/.env` a `.gitignore` antes de crearlo; 2) versionar solo la plantilla `config/.env.example` sin valores reales; 3) crear el `config/.env` real local y comprobar con `git check-ignore`; 4) cargar los secretos con `set -a; source config/.env; set +a` y usarlos como variables, sin teclearlos. Si me salto la primera, el `.env` real podría entrar en un `git add .` y la contraseña quedaría para siempre en el historial.
+Primero meto el archivo `.env` en el `.gitignore` para curarme en salud. Luego subo al repo solo una plantilla de mentira sin los valores reales. Me creo el real en local y compruebo con git que está ignorado. Por último, lo cargo con `source` para usar las contraseñas como variables. Si me salto el primer paso, le hago push a la contraseña y la lío.
 
 **14. ¿Por qué no escribir la contraseña en el `docker run` aunque el script no se suba?**
-Porque todo lo que se teclea queda en texto plano en `~/.bash_history` (y en grabaciones con `script`). Usando `"$ORACLE_PWD"` solo queda el nombre de la variable.
+Porque si la escribes tal cual, se queda en texto plano guardada para siempre en el historial de comandos del bash de tu máquina. Si uso `"$ORACLE_PWD"`, en el historial solo se guarda el nombre de la variable y no dejas rastro.
 
 **15. Si la contraseña aparece en un commit ya publicado, ¿basta con borrarla?**
-No: sigue en el historial y cualquiera puede recuperarla. Hay que darla por comprometida y rotarla (cambiarla y recrear el entorno con la nueva), no hacer más push y avisar al docente para limpiar la branch.
+Qué va. Si solo la borras, se queda en el historial antiguo de los commits de git. Hay que darla por reventada, cambiarla por una contraseña nueva, dejar de hacer push inmediatamente y avisar al profesor para que limpien la rama.
 
 ## Oracle y herramientas
 
 **16. ¿Por qué no usamos SPOOL ni `@archivo.sql` con sqlplus dentro del contenedor?**
-sqlplus corre dentro del contenedor: SPOOL escribiría el archivo en el sistema de archivos del contenedor y `@archivo.sql` buscaría el script allí, donde no existe (SP2-0310). En su lugar redirigimos el archivo del repositorio con `< archivo.sql` y capturamos la salida con `| tee`.
+Porque sqlplus está corriendo aislado dentro de Docker. Si haces SPOOL te escupe el archivo dentro del contenedor, y si haces `@archivo` lo intenta buscar también ahí dentro (y te tira error). Hay que pasarle el script desde mi máquina con `<` y guardar la salida en mi terminal con `tee`.
 
 **17. ¿Qué hace `WHENEVER SQLERROR EXIT SQL.SQLCODE` y qué pasaría sin ella?**
-Hace que sqlplus termine en el primer error devolviendo su código, de modo que `08-aplicar-migraciones.sh` detecta el fallo y no ejecuta V001 sobre un V000 fallido. Sin ella sqlplus seguiría ejecutando sentencias sobre un estado a medias.
+Hace que si falla cualquier cosa en el SQL, se corte todo de golpe. Si no lo pones, te tira un error y sigue ejecutando lo de abajo, liándotela porque te va a aplicar migraciones nuevas sobre un estado que se ha quedado a medias o roto.
 
 **18. ¿Qué es una migración y por qué V000 y V001 no se editan una vez aplicadas?**
-Un script SQL numerado que lleva la base de un estado al siguiente, aplicado en orden. Una vez aplicada, editarla haría que el repositorio ya no describa lo que realmente se ejecutó y que otros entornos diverjan; si hay que corregir algo se crea una migración nueva (V002…).
+Es un script numerado para ir avanzando la base de datos de un estado inicial al siguiente. Si ya la has aplicado, no la puedes editar en texto porque entonces tu repositorio ya no cuadra con lo que tienes ejecutado de verdad en la base de datos. Si la cagas, creas una migración nueva para arreglarlo y punto.
 
 **19. ¿Por qué en SQL Developer se usa el servicio FREEPDB1 y no FREE ni un SID?**
-FREEPDB1 es la PDB donde están los esquemas de trabajo. FREE es el servicio de la CDB raíz (CDB$ROOT) y con SID también acabaríamos en el contenedor raíz, donde no están los usuarios `ADMIN_*` ni `ALUMNO`.
+Porque FREEPDB1 es mi base de datos conectable (PDB), donde de verdad están mis tablas y mi trabajo. Si entro a FREE a secas o con el SID acabo metido en el contenedor raíz de Oracle, y ahí no existen ni mis esquemas ni mis usuarios de la práctica.
 
 **20. ¿Qué aporta SQLcl frente a SQL*Plus y por qué dominar ambas?**
-SQLcl es la herramienta moderna: autocompletado, historial, formato automático (`SET SQLFORMAT ansiconsole`), conexiones guardadas (`CONNECT -save`) e integración con Liquibase. SQL*Plus existe en cualquier servidor Oracle desde 1982 y a veces es lo único disponible en una terminal de producción, así que un DBA debe saber usar las dos.
+SQLcl es lo nuevo: tiene autocompletado, historiales, guarda las conexiones y te formatea la salida limpia. Pero SQL*Plus es el viejo confiable, está en todos los servidores Oracle desde hace años. Si algún día me meto a un servidor de producción que está pelado de herramientas, tengo que saber usarlo sí o sí.
 
 ## Entorno de trabajo
 
 **21. ¿Por qué pasamos de Git Bash a Ubuntu en WSL 2?**
-Porque Oracle, Docker y los servidores reales son Linux, y en Linux nativo/WSL 2 no hay emulación. Problemas de Git Bash que desaparecen: convierte rutas `/opt/...` a rutas de Windows y rompe argumentos de Docker; `docker run -it` necesita `winpty` o falla con "not a TTY"; faltan `free`, `ss` o `htop`; y las herramientas Java dan problemas con la petición de contraseñas. (En mi caso trabajo directamente en Linux nativo, que cumple lo mismo.)
+Porque al final Docker, Oracle y los servidores reales van en Linux. Git Bash en Windows te revienta las rutas al intentar emularlas, da fallos raros con los argumentos de Docker y le faltan herramientas básicas. Trabajando en Linux nativo me dejo de tonterías y todo funciona como tiene que ir a la primera.
 
 **22. ¿Por qué clonar en `~/oracle-database-lab` y no en `/mnt/c/...`? ¿Por qué bash y no zsh?**
-En `/mnt/c` cada operación cruza entre dos sistemas de archivos: Git y Docker van mucho más lentos, se pierden permisos de Linux (como el de ejecución) y reaparecen problemas de finales de línea. Bash porque es la shell por defecto de prácticamente todos los servidores: un script en bash funciona en cualquiera, mientras que zsh tiene diferencias sutiles y normalmente no está instalada.
+Si clono el repo en el disco de Windows (`/mnt/c`), cada vez que Docker lee algo tiene que cruzar el sistema de archivos, va lentísimo y pierdes los permisos de ejecución de los scripts. Y uso bash porque es lo estándar; te lo vas a encontrar en el 100% de los servidores, mientras que zsh casi nunca está instalada por defecto.
