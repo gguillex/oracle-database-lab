@@ -1,0 +1,7 @@
+
+FORCE_MATCHING_SIGNATURE   CURSORES EJEMPLO
+------------------------ ---------- --------------------------------------------------------------------------------
+	      1.8632E+18	275 SELECT /* lab4_literal */ COUNT(*) FROM admin_academia.aca_estudiantes WHERE est
+				    udiante_id = 1000
+
+
