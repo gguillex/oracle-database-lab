@@ -1,0 +1,56 @@
+Formato SQL borrado
+
+== 1. Cuántos procesos tiene la instancia y de qué tipo ==
+
+TIPO        PROCESOS_ORACLE PROCESOS_LINUX
+----------- --------------- --------------
+background               87             54
+servidor                  6              6
+(si procesos_oracle > procesos_linux: algunos procesos Oracle son HILOS dentro de un mismo proceso Linux, p. ej. SCMN)
+
+== 2. Los procesos obligatorios y los que verás en el examen (v$bgprocess + v$process) ==
+
+PNAME  SPID     DESCRIPTION                                     
+------ -------- ------------------------------------------------
+PMON   928      process cleanup                                 
+LREG   994      Listener Registration                           
+SMON   985      System Monitor Process                          
+DBW0   975      db writer process 0                             
+LGWR   981      Redo etc.                                       
+CKPT   983      checkpoint                                      
+MMON   1008     Manageability Monitor Process                   
+MMNL   1010     Manageability Monitor Process 2                 
+RECO   992      distributed recovery                            
+ARC0   1079     Archival Process 0                              
+CJQ0   1284     Job Queue Coordinator                           
+CLMN   932      process cleanup                                 
+DIAG   958      diagnosibility process                          
+DIA0   973      diagnosibility process 0                        
+MMAN   950      Memory Manager                                  
+PMAN   971      process manager                                 
+PSP0   936      process spawner 0                               
+VKTM   940      Virtual Keeper of TiMe process                  
+
+== 3. ¿Hay archivador (ARCn)? En NOARCHIVELOG no debería aparecer ==
+
+PROCESOS_ARCN
+-------------
+            4
+
+== 4. Mi sesión y el proceso servidor que la atiende (arquitectura de servidor dedicado) ==
+
+       SID    SERIAL# USERNAME     MACHINE        PROGRAM                            SPID    
+---------- ---------- ------------ -------------- ---------------------------------- --------
+       209      37436 C##OPS_RO    Guillermo-Port SQLcl                              2631    
+                                   atil                                                      
+
+
+== 5. Todas las sesiones de usuario ahora mismo ==
+
+       SID USERNAME     STATUS   MACHINE        PROGRAM                            SPID    
+---------- ------------ -------- -------------- ---------------------------------- --------
+        64              ACTIVE   babd017e3ab1   oracle@babd017e3ab1 (J000)         2261    
+       176              ACTIVE   babd017e3ab1   oracle@babd017e3ab1 (J001)         2263    
+       209 C##OPS_RO    ACTIVE   Guillermo-Port SQLcl                              2631    
+                                 atil                                                      
+
