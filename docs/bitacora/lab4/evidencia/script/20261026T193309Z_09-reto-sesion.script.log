@@ -1,0 +1,15 @@
+-- Consulta: v$session + v$process (+ v$sql), como C##OPS_RO, mientras corre la consulta larga de SYS en FREEPDB1
+SET LINESIZE 200 PAGESIZE 50
+COLUMN username FORMAT A10
+COLUMN program FORMAT A30
+COLUMN spid FORMAT A8
+COLUMN sql_text FORMAT A60
+SELECT s.sid, s.serial#, s.con_id, s.username, s.status, p.spid, ROUND(p.pga_used_mem/1048576,1) pga_usada_mb, ROUND(p.pga_alloc_mem/1048576,1) pga_asignada_mb, SUBSTR(q.sql_text,1,60) sql_text
+  FROM v$session s JOIN v$process p ON p.addr = s.paddr LEFT JOIN v$sql q ON q.sql_id = s.sql_id AND q.child_number = s.sql_child_number
+ WHERE s.type = 'USER' AND s.status = 'ACTIVE' AND s.sid <> SYS_CONTEXT('USERENV','SID');
+
+
+   [1mSID[m    [1mSERIAL#[m    [1mCON_ID[m [1mUSERNAME[m    [1mSTATUS[m    [1mSPID[m       [1mPGA_USADA_MB[m    [1mPGA_ASIGNADA_MB[m [1mSQL_TEXT[m                                                        
+______ __________ _________ ___________ _________ _______ _______________ __________________ _______________________________________________________________ 
+    56      21925         3 SYS         ACTIVE    7304                3,3                3,7 SELECT COUNT(*) FROM admin_academia.aca_matriculas a, admin_    
+

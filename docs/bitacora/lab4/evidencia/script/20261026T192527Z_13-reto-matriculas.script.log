@@ -1,0 +1,7 @@
+Session altered.
+TABLE_NAME	   NUM_ROWS AVG_ROW_LEN     BLOCKS   PCT_FREE
+---------------- ---------- ----------- ---------- ----------
+ACA_MATRICULAS	      60000	     30        370	   10
+BLOQUES_ASIGNADOS	  MB
+----------------- ----------
+	      384	   3
