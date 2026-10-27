@@ -1,0 +1,47 @@
+
+===== 1. Tablas: r filas, b bloques, R bytes por fila y bfr = r / b =====
+
+TABLE_NA          R          B    R_BYTES        BFR         MB LAST_ANALYZE
+-------- ---------- ---------- ---------- ---------- ---------- ------------
+CLIENTE      100000       1478         98         68         12 2026-10-27
+PEDIDO      1000000       5319         32        188         42 2026-10-27
+(b = ceil(r / bfr): bfr es una MEDIA, cada bloque tiene más o menos filas según el tamaño de cada una)
+
+===== 2. Columnas con histograma: el optimizador conoce la distribución real =====
+
+TABLE_NA COLUMN_NAME    NUM_DISTINCT HISTOGRAM        NUM_BUCKETS
+-------- -------------- ------------ ---------------- -----------
+CLIENTE  CIUDAD                   12 FREQUENCY                 12
+CLIENTE  PAIS                     40 FREQUENCY                 40
+PEDIDO   CANAL                     3 FREQUENCY                  3
+PEDIDO   ESTADO                    4 FREQUENCY                  4
+
+===== 3. Los sesgos que dan juego a las consultas Q1-Q16 =====
+
+DATO                                  PCT
+------------------------------ ----------
+cliente pais = ES                    59.9
+cliente ciudad = Lorca                 .1
+cliente apellidos LIKE Gonz%            2
+pedido estado = P                       2
+
+===== 4. Reparto de estados y canales del pedido =====
+
+E    PEDIDOS        PCT
+- ---------- ----------
+C     902061       90.2
+D      27939        2.8
+E      50000          5
+P      20000          2
+
+C    PEDIDOS        PCT
+- ---------- ----------
+A     332955       33.3
+T     111383       11.1
+W     555662       55.6
+
+===== 5. Rango de fechas (tres años hasta el día de la migración) y pedidos por cliente =====
+
+PRIMERA    ULTIMA     CLIENTES_CON_PEDIDO PEDIDOS_POR_CLIENTE
+---------- ---------- ------------------- -------------------
+2023-10-28 2026-10-26               99995                  10

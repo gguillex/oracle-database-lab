@@ -1,0 +1,72 @@
+
+Session altered.
+
+
+PL/SQL procedure successfully completed.
+
+
+Tablespace created.
+
+
+User created.
+
+
+Table created.
+
+
+Table created.
+
+
+100000 rows created.
+
+
+Commit complete.
+
+
+1000000 rows created.
+
+
+Commit complete.
+
+
+Index created.
+
+
+Index created.
+
+
+Index created.
+
+
+Index created.
+
+
+Index created.
+
+
+Table altered.
+
+
+PL/SQL procedure successfully completed.
+
+
+TABLE_NA   NUM_ROWS	BLOCKS
+-------- ---------- ----------
+CLIENTE      100000	  1478
+PEDIDO	    1000000	  5319
+
+2 rows selected.
+
+
+TABLE_NA INDEX_NAME	      UNIQUENES
+-------- -------------------- ---------
+CLIENTE  IX_CLI_PAIS_CIUDAD   NONUNIQUE
+CLIENTE  PK_CLIENTE	      UNIQUE
+CLIENTE  UX_CLI_EMAIL	      UNIQUE
+PEDIDO	 IX_PED_CLIENTE       NONUNIQUE
+PEDIDO	 IX_PED_FECHA	      NONUNIQUE
+PEDIDO	 IX_PED_IMPORTE       NONUNIQUE
+PEDIDO	 PK_PEDIDO	      UNIQUE
+
+7 rows selected.
+
