@@ -1,9 +1,0 @@
-===== Reto D · Q9: los 20 pedidos más recientes con todas sus columnas, con IX_PED_FECHA tal como está =====
-Q9 ??ltimos 20		       filas=	  20  lecturas l??gicas=      4  f??sicas=    0       .5 ms
-			       plan: COUNT STOPKEY > VIEW > TABLE ACCESS BY INDEX ROWID PEDIDO > INDEX FULL SCAN DESCENDING IX_PED_FECHA
-===== Lo que costaría hacerlo cubriente: tamaño de la tabla frente al índice actual =====
-
-SEGMENT_NAME	       MB
--------------- ----------
-IX_PED_FECHA	       22
-PEDIDO		       42

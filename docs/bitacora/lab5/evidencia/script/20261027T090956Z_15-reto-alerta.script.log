@@ -1,8 +1,0 @@
-
-(Si no sale ninguna fila: no hay que despertar a nadie)
--- Prueba de disparo: mismo SQL con el umbral de la FRA bajado al 0,1 %
-
-ALERTA                                           
-________________________________________________ 
-ALERTA: FRA al 1,8 % (umbral de PRUEBA 0,1 %)    
-(Si no sale ninguna fila: no hay que despertar a nadie)

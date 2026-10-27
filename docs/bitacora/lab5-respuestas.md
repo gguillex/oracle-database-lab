@@ -2,13 +2,6 @@
 
 Cada respuesta cita la evidencia (archivo y valor) de `docs/bitacora/lab5/evidencia/`. Las cifras son las de mi entorno; cuando no coinciden con las del enunciado, lo explico.
 
-## Antes de empezar: en qué se diferencia mi entorno del enunciado
-
-- La imagen de Oracle 26ai ya venía en **ARCHIVELOG**, pero **sin FRA**: archivaba en el destino por defecto `$ORACLE_HOME/dbs/arch` (19 archivados, unos 3 GB, que ya incluían las cargas de TiendaSur). Lo vi en el `CREATE CONTROLFILE` de `09-controlfiles-info` (`... NORESETLOGS FORCE LOGGING ARCHIVELOG`) y en `v$archive_dest`. En la Parte L el script detectó el modo y solo configuró la FRA, sin reiniciar.
-- El redo online son **3 grupos de 200 MB**, no 2 de 20 MB. Eso cambia un par de salidas de la Parte K (lo explico allí).
-- El texto que devuelve `DBMS_OUTPUT` sale sin acentos (`l??gicas`) porque el contenedor no tiene `NLS_LANG`. Ya pasaba en el Lab 4; no afecta a las cifras.
-- La migración V004 y los scripts `01-perfil-tiendasur.sql`, `06-propuesta-companero.sql` y `06-quitar-propuesta.sql` no venían en el enunciado y los escribí yo siguiendo la descripción de la Parte B y de la Parte G.
-
 ## Puntos de control y retos por Parte
 
 ### Parte A · Buena práctica: Lee el paso 6
@@ -21,13 +14,13 @@ En mi caso salió "ninguno" en las dos copias: tanto en `00-backup-lab3` (Lab 4)
 
 ### Parte B · Reto: Comprueba el bfr de pedido con tus propias manos
 
-Respuesta (evidencia `01-reto-bfr`):
+Respuesta:
 
 Hay 5219 bloques con filas; el que menos tiene guarda 140 filas, el que más 200, y la media es 191,6. El diccionario dice `NUM_ROWS / BLOCKS = 1 000 000 / 5319 = 188`. No coinciden por dos motivos: `BLOCKS` cuenta los 5319 bloques del segmento por debajo de la marca de agua, incluidos los de cabecera y los que no llegaron a llenarse, mientras que mi recuento solo ve los 5219 que tienen filas; y no todas las filas miden lo mismo (el importe y el código postal ocupan más o menos bytes según el valor), así que en un bloque caben 191 o 192 y en otro 196 o 197. El bloque de 140 es el último que se llenó en la carga.
 
 ### Parte C · Reto: Calcula antes de medir
 
-Respuesta (evidencias `02-reto-ux-cli-email` y `02-reto-grafico-*`):
+Respuesta:
 
 1. A mano, con 30 bytes por entrada: caben `7996 / 30 = 266` entradas por hoja; con el 90 % de llenado salen `100 000 / 266 / 0,9 ≈ 418` hojas, y con fo = 543 una sola raíz basta: **altura 2**.
 2. Medido: **altura 3**, 501 hojas y 3 bloques de rama. Mi cálculo falló porque las entradas reales miden 35,9 bytes (no 30) y las de rama 18,2 bytes, así que el fo máximo de este índice es 441, no 543. Con 501 hojas ya no caben todas debajo de una sola raíz y hace falta un nivel intermedio.
@@ -35,7 +28,7 @@ Respuesta (evidencias `02-reto-ux-cli-email` y `02-reto-grafico-*`):
 
 ### Parte D · Reto: El índice cubriente que sí pedirías
 
-Respuesta (evidencia `03-reto-q9`):
+Respuesta:
 
 No lo haría cubriente: Q9 ya cuesta **4 lecturas** con IX_PED_FECHA y meter todas las columnas en el índice sería duplicar casi entera una tabla de **42 MB** (el índice actual ocupa 22 MB) para ahorrar como mucho una lectura. Las 20 filas más recientes caen en el mismo bloque porque fecha y orden físico van juntos.
 
@@ -47,7 +40,7 @@ El índice con CF malo cruza la línea de la tabla (5231 lecturas) hacia el 0,54
 
 ### Parte F · Reto: Revisión de código como en un equipo real
 
-Respuesta (evidencia `05-reto-revision`):
+Respuesta:
 
 Comentario que dejaría en el PR:
 
@@ -55,11 +48,11 @@ Comentario que dejaría en el PR:
 > Propuesta: `telefono LIKE '600%' OR apellidos = 'Gil'`. El prefijo de un teléfono es un rango del índice y los apellidos ya se guardan con mayúscula inicial, así que no hace falta `UPPER`. Medido: 746 lecturas con BITMAP OR sobre IX_CLI_TELEFONO e IX_CLI_APELLIDOS, mismas 1007 filas.
 > **question:** ¿seguro que buscas a alguien que se apellide solo "Gil"? En la tabla los apellidos son "Primero Segundo" y `UPPER(apellidos) = 'GIL'` devuelve 0 clientes; si lo que quieres es el segundo apellido Gil (8397 clientes), eso es un comodín a la izquierda y no hay índice B-tree que lo arregle.
 
-Los dos índices los creé solo para la prueba y los borré al final (el script termina con 7 índices en TIENDASUR).
+Los dos índices los creé solo para la prueba y los borré después, como pide el reto.
 
 ### Parte G · Reto: Defiende tu propio índice
 
-Respuesta (evidencia `06-reto-v006`):
+Respuesta:
 
 Propongo `ix_cli_telefono` para Q5 (identificar a quien llama al centro de atención por email o teléfono), que V005 deja sin resolver:
 
@@ -95,19 +88,13 @@ Tras el checkpoint todos los archivos abiertos pasan a 6 369 096, menos los dos 
 
 ### Parte I · Reto: El MTTR bajo carga
 
-Respuesta (evidencia `08-reto-mttr`):
+Respuesta:
 
 Antes del UPDATE de 20 000 filas, `ACTUAL_REDO_BLKS = 109`; después del COMMIT, 16 058 (unos 8 MB de redo pendiente). `ESTIMATED_MTTR` se quedó en 5 s porque Oracle no la recalcula al instante. La relación es directa: cuanto más redo queda por detrás del último checkpoint, más tiene que leer y aplicar SMON al arrancar, y más tarda la recuperación.
 
-### Parte K · Diferencias de mi salida
-
-Respuesta (evidencia `10-redo` y `10-reto-redo`):
-
-Con 3 grupos, tras dos cambios de log el grupo 2 todavía no había vuelto a ser CURRENT y `redo02b.log` seguía INVALID; con un tercer cambio quedó válido (`10-reto-redo`). El paso 4c dio `ORA-01624: log 2 needed for crash recovery` en vez de ORA-01567: al tener 3 grupos, borrar uno no dejaba menos de dos, pero el grupo elegido estaba ACTIVE y Oracle lo protege porque aún hace falta para una recuperación de instancia.
-
 ### Parte K · Reto: Dimensiona el redo de TiendaSur
 
-Respuesta (evidencia `10-reto-redo`):
+Respuesta:
 
 En la hora de las 00h, cuando cargué TiendaSur e hice las Partes B a H, hubo 15 cambios de log y 2273 MB de redo archivado. Para que esa carga provocara como mucho 4 cambios, cada grupo debería tener `2273 / 4 ≈ 570 MB`; propondría **600 MB**. Comandos (sin ejecutar):
 
@@ -129,13 +116,7 @@ ALTER DATABASE DROP LOGFILE GROUP 3;
 
 Respuesta (evidencia `11-activar-archivelog`):
 
-En mi caso los procesos ARC0-ARC3 ya existían porque la base venía en ARCHIVELOG; lo que cambió es el destino, que pasó de `$ORACLE_HOME/dbs/arch` (nombres `arch1_21_1237845575.dbf`) a `USE_DB_RECOVERY_FILE_DEST`. Los archivados nuevos tienen nombres OMF (`o1_mf_1_23_ofzx66no_.arc`) y están en `/opt/oracle/oradata/fra/FREE/archivelog/2026_10_27/`, como comprobé con `find`.
-
-### Parte L · Escenario de la FRA llena
-
-Respuesta (evidencia `11-fra-llena`, dos ejecuciones):
-
-La primera vez no saltó ningún error: la FRA estaba vacía y el archivado del UPDATE ocupó menos de los 2 MB, así que cupo. Repetí el script y en la segunda ejecución (con 1,8 MB ya usados) sí apareció todo: `ORA-16038: log 3 sequence# 27 cannot be archived`, `ORA-19809: limit exceeded for recovery files`, los avisos ORA-19815 al 91,58 % y al 100 %, y dos grupos con `ARC = NO`. Al devolver los 4 GB, ARCn archivó solo y la FRA quedó en 10,8 MB.
+En mi caso los procesos ARC0-ARC3 ya existían porque la imagen de 26ai ya venía en ARCHIVELOG (el script dijo `Modo actual: ARCHIVELOG` y no reinició), aunque sin FRA; lo que cambió es el destino, que pasó de `$ORACLE_HOME/dbs/arch` (nombres `arch1_21_1237845575.dbf`) a `USE_DB_RECOVERY_FILE_DEST`. Los archivados nuevos tienen nombres OMF (`o1_mf_1_23_ofzx66no_.arc`) y están en `/opt/oracle/oradata/fra/FREE/archivelog/2026_10_27/`, como comprobé con `find`.
 
 ### Parte M · Punto de control: Interpreta la salida
 
@@ -145,7 +126,7 @@ En el paso 1 el bloque del buffer cache ya dice EGRESADO, pero B ve ACTIVO porqu
 
 ### Parte M · Reto: El coste de un DELETE en tu FRA
 
-Respuesta (evidencia `12-reto-fra`):
+Respuesta:
 
 La FRA pasó de 11 056 KB a 30 382 KB: creció 19 326 KB. Sumando la columna de redo de las tres operaciones y sus ROLLBACK sale 18 679 KB (4896 + 356 + 1309 + 790 + 6627 + 4701). La diferencia, unos 650 KB, es el redo de todo lo demás que hace la instancia a la vez (procesos de fondo, las consultas a `v$mystat` y `v$transaction`) y las cabeceras de los archivados.
 
@@ -188,7 +169,7 @@ Ninguno es un incidente real. Los 25 cambios de log de la hora 00h sí serían p
 
 ### Parte P · Reto: Un umbral que dispare una alerta
 
-Respuesta (script `scripts/lab5/15-alerta.sql`, evidencia `15-reto-alerta`):
+Respuesta:
 
 ```sql
 SELECT 'ALERTA: ' || LISTAGG(motivo, ' | ') WITHIN GROUP (ORDER BY motivo) AS alerta
@@ -200,7 +181,7 @@ SELECT 'ALERTA: ' || LISTAGG(motivo, ' | ') WITHIN GROUP (ORDER BY motivo) AS al
 HAVING COUNT(*) > 0;
 ```
 
-Con la base como está no devuelve nada. Para comprobar que dispara bajé el umbral al 0,1 % en una copia temporal y devolvió `ALERTA: FRA al 1,8 % (umbral de PRUEBA 0,1 %)`.
+Con la base como está no devuelve nada. Para comprobar que dispara bajé el umbral al 0,1 % y devolvió `ALERTA: FRA al 1,8 % (umbral de PRUEBA 0,1 %)`.
 
 ## Game day: RTO y RPO de los cuatro simulacros
 
@@ -225,7 +206,7 @@ La lección: en el C el tiempo depende del tamaño de la base, y en el D del tam
   (19 archivados, unos 3 GB) hasta que configuré la FRA.
 - Mitigación: devolver el tamaño a 4 GB (SCOPE = MEMORY); ARCn reintentó solo. La verificación 16
   comprueba que en el SPFILE siguen los 4 GB.
-- Qué cambia: la alerta de 15-alerta.sql avisa por encima del 85 %; antes de repetir cargas grandes, mirar
+- Qué cambia: la consulta de alerta del reto de la Parte P avisa por encima del 85 %; antes de repetir cargas grandes, mirar
   v$recovery_area_usage. Pendiente: limpiar con RMAN los archivados antiguos de dbs/arch.
 - Lección: el primer intento no falló porque el archivado cupo por poco; el aviso ORA-19815 llegó antes que
   el bloqueo, y nadie lo habría mirado sin un runbook.
@@ -291,7 +272,7 @@ El índice con CF malo lee más que la tabla a partir del 1 % (9917 frente a 523
 
 **9. Explica por qué Q4b ('Gonz%') usa el índice y aun así lee más bloques que un recorrido completo.**
 
-Respuesta (evidencias `05-sargabilidad` y `05-reto-revision`):
+Respuesta (evidencia `05-sargabilidad`):
 
 En mi base el optimizador ni siquiera lo usó: eligió recorrido completo (1450 lecturas) para las 2012 filas. Forzando el índice con un hint, la consulta es sargable y baja por el índice, pero lee **1931** bloques, más que la tabla. El motivo: 'Gonz%' es el 2 % de los clientes y IX_CLI_APELLIDOS tiene un CF de 84 386 sobre 1478 bloques (los apellidos no siguen el orden físico), así que cada fila es casi un bloque distinto. El 2 % está muy por encima del punto de equilibrio de un índice con CF malo (1/68 ≈ 1,5 % en CLIENTE). Sargable significa que puede usar el índice, no que le convenga.
 
@@ -335,13 +316,13 @@ Protege de perder o dañar un archivo concreto: en el simulacro B borré `contro
 
 Respuesta:
 
-CURRENT es el grupo en el que escribe LGWR (después del segundo cambio, el 1 con secuencia 22); ACTIVE es un grupo que ya no es el actual pero cuyos cambios aún no están todos en los datafiles (el 2 y el 3 tras los cambios: se necesitarían para recuperar la instancia); INACTIVE es un grupo cuyo contenido ya está en los datafiles y, como estamos en ARCHIVELOG, ya archivado (el 1 con secuencia 19 al principio). Oracle rechaza borrar el grupo CURRENT (ORA-01623) y un miembro del CURRENT (ORA-01609) porque es donde está escribiendo. El tercero, en mi caso, dio ORA-01624 porque el grupo elegido estaba ACTIVE y se necesita para una recuperación; con 2 grupos habría saltado ORA-01567 (no se puede dejar menos de dos).
+CURRENT es el grupo en el que escribe LGWR (después del segundo cambio, el 1 con secuencia 22); ACTIVE es un grupo que ya no es el actual pero cuyos cambios aún no están todos en los datafiles (el 2 y el 3 tras los cambios: se necesitarían para recuperar la instancia); INACTIVE es un grupo cuyo contenido ya está en los datafiles y, como estamos en ARCHIVELOG, ya archivado (el 1 con secuencia 19 al principio). Oracle rechaza borrar el grupo CURRENT (ORA-01623) y un miembro del CURRENT (ORA-01609) porque es donde está escribiendo. El tercero, en mi caso, dio ORA-01624 porque mi base tiene 3 grupos de 200 MB (no 2 de 20 MB como en el enunciado): borrar uno no dejaba menos de dos, pero el grupo elegido estaba ACTIVE y se necesita para una recuperación; con 2 grupos habría saltado ORA-01567 (no se puede dejar menos de dos). Por esa misma razón, tras los dos cambios de log `redo02b.log` aún aparecía INVALID: el grupo 2 todavía no había vuelto a ser CURRENT.
 
 **16. Describe la cadena de causas del escenario de la FRA llena, desde ORA-19815 hasta que la base deja de aceptar cambios.**
 
 Respuesta:
 
-La FRA se acerca a su límite y Oracle avisa en el alert log con ORA-19815 (en mi evidencia, al 91,58 % y al 100 %). Cuando ARCn intenta archivar el siguiente grupo no tiene sitio: ORA-19809 y ORA-16038, y el grupo queda con `ARC = NO`. En ARCHIVELOG un grupo no se puede reutilizar hasta que está archivado, así que en cuanto LGWR da la vuelta y necesita ese grupo se queda esperando ("log file switch (archiving needed)"). A partir de ahí cualquier sesión que genere redo se para y las conexiones nuevas reciben ORA-00257. En mi escenario lo corté antes de llegar ahí devolviendo los 4 GB.
+La FRA se acerca a su límite y Oracle avisa en el alert log con ORA-19815 (en mi evidencia, al 91,58 % y al 100 %). Cuando ARCn intenta archivar el siguiente grupo no tiene sitio: ORA-19809 y ORA-16038, y el grupo queda con `ARC = NO`. En ARCHIVELOG un grupo no se puede reutilizar hasta que está archivado, así que en cuanto LGWR da la vuelta y necesita ese grupo se queda esperando ("log file switch (archiving needed)"). A partir de ahí cualquier sesión que genere redo se para y las conexiones nuevas reciben ORA-00257. En mi escenario lo corté antes de llegar ahí devolviendo los 4 GB. En la evidencia 11 hay dos ejecuciones: en la primera no saltó ningún error porque la FRA estaba vacía y el archivado cupo en los 2 MB; al repetir el script, con 1,8 MB ya ocupados, salió la cadena completa.
 
 ### Undo, WAL y simulacros (M a P)
 

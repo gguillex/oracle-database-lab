@@ -1,4 +1,0 @@
-===== Reto M · cuánto crece la FRA al ejecutar 12-undo-y-redo.sql una vez (ARCHIVE LOG CURRENT antes y después) =====
-FRA usada antes : 11321856 bytes (11056 KB)
-FRA usada después: 31111680 bytes (30382 KB)
-Crecimiento      : 19326 KB

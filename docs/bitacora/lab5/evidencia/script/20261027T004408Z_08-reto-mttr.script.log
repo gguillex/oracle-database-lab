@@ -1,9 +1,0 @@
-===== Reto I · MTTR bajo carga: v$instance_recovery antes y después de un UPDATE de 20 000 filas, sin checkpoint =====
-
-MOMENTO 		     ESTIMATED_MTTR ACTUAL_REDO_BLKS
----------------------------- -------------- ----------------
-antes del UPDATE			  5		 109
-
-MOMENTO 		     ESTIMATED_MTTR ACTUAL_REDO_BLKS
----------------------------- -------------- ----------------
-despu??s del UPDATE + COMMIT		  5	       16058
