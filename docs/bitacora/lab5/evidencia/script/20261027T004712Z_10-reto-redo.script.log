@@ -1,0 +1,31 @@
+===== Complemento: con 3 grupos hace falta un TERCER cambio para que el grupo 2 se escriba y redo02b deje de ser INVALID =====
+
+    GROUP#  SEQUENCE# STATUS
+---------- ---------- ----------------
+	 1	   22 ACTIVE
+	 2	   23 CURRENT
+	 3	   21 INACTIVE
+
+    GROUP# MEMBER					STATUS
+---------- -------------------------------------------- -------
+	 1 /opt/oracle/oradata/FREE/redo01.log
+	 1 /opt/oracle/oradata/FREE/redo01b.log
+	 2 /opt/oracle/oradata/FREE/redo02.log
+	 2 /opt/oracle/oradata/FREE/redo02b.log
+	 3 /opt/oracle/oradata/FREE/redo03.log
+	 3 /opt/oracle/oradata/FREE/redo03b.log
+
+===== Reto K · cambios de log por hora (v$log_history) =====
+
+HORA		  CAMBIOS
+-------------- ----------
+2026-10-26 18h		1
+2026-10-26 23h		1
+2026-10-27 00h	       15
+-- Redo generado en la hora de la carga de TiendaSur y de las Partes B a H (archivados de hoy)
+
+HORA	       ARCHIVADOS    MB_REDO
+-------------- ---------- ----------
+2026-10-26 18h		1	 177
+2026-10-26 23h		1	 194
+2026-10-27 00h	       15	2273
