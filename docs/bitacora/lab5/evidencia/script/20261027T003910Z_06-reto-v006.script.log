@@ -1,0 +1,33 @@
+
+
+
+===== Reto G · V006 propuesto: ix_cli_telefono para Q5 (email O teléfono), con las cinco preguntas =====
+-- 1 y 2 · Necesidad y viabilidad: lecturas de Q5 antes, selectividad de telefono
+Q5 antes (sin ??ndice)	       filas=	   1  lecturas l??gicas=   1447  f??sicas=    0      7.1 ms
+			       plan: TABLE ACCESS FULL CLIENTE
+
+TELEFONOS_DISTINTOS PCT_POR_VALOR
+------------------- -------------
+	      99959	     .001
+-- 3 · Escritura: 2000 INSERT de cliente sin el índice nuevo
+cliente INSERT sin ix_tel      filas=  2000  lecturas l??gicas=  20481	bloques modificados= 20289  redo=  2735 KB    52.6 ms  | por fila: 10.1 bloques, 1400 bytes de redo
+Q5 despu??s (ix_cli_telefono)  filas=	   1  lecturas l??gicas=      6  f??sicas=    0       .2 ms
+			       plan: TABLE ACCESS BY INDEX ROWID BATCHED CLIENTE > BITMAP CONVERSION TO ROWIDS > BITMAP OR > BITMAP CONVERSION FROM ROWIDS > INDEX RANGE SCAN IX_CLI_TELEFONO > BITMAP C
+ONVERSION FROM ROWIDS > INDEX RANGE SCAN UX_CLI_EMAIL
+cliente INSERT con ix_tel      filas=  2000  lecturas l??gicas=  24511	bloques modificados= 24297  redo=  3212 KB    59.2 ms  | por fila: 12.1 bloques, 1644 bytes de redo
+-- 4 · Redundancia: ¿algún índice de CLIENTE empieza ya por telefono?
+
+INDEX_NAME	 COLS					MB
+---------------- ------------------------------ ----------
+IX_CLI_PAIS_CIUD PAIS, CIUDAD				 3
+AD
+
+IX_CLI_TELEFONO  TELEFONO				 3
+PK_CLIENTE	 ID_CLIENTE				 2
+UX_CLI_DNI	 DNI					 3
+UX_CLI_EMAIL	 EMAIL					 5
+-- 5 · Ciclo de vida: se retira de la base; entra (o no) por migración V006 tras la revisión del PR
+
+INDICES_TIENDASUR
+-----------------
+		9
