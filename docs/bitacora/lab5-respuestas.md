@@ -41,9 +41,7 @@ No lo haría cubriente: Q9 ya cuesta **4 lecturas** con IX_PED_FECHA y meter tod
 
 ### Parte E · Reto: Dibuja tu curva
 
-Respuesta (evidencia `04-agrupamiento-equilibrio`, gráfico generado con `scripts/lab5/04-curva-equilibrio.py`):
-
-![Curva del punto de equilibrio](lab5/evidencia/capturas/20261027T003514Z_04-curva-equilibrio.svg)
+Respuesta (evidencia `04-agrupamiento-equilibrio`, sección 3):
 
 El índice con CF malo cruza la línea de la tabla (5231 lecturas) hacia el 0,54 %, el índice con CF bueno no la cruza hasta cerca del 66 %, y el optimizador se pasa al recorrido completo entre el 0,1 % y el 0,2 %. No coinciden porque miden cosas distintas: los dos cruces cuentan lecturas lógicas, donde una lectura aleatoria cuesta lo mismo que una secuencial; el optimizador, en cambio, supone que la lectura aleatoria del índice es más cara que la multibloque de la tabla, y por eso abandona el índice antes, justo donde dice la fórmula con c_sec/c_aleat = 1/5 (0,11 %).
 
