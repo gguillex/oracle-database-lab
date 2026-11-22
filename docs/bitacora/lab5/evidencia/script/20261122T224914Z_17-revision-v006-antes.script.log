@@ -1,0 +1,17 @@
+== 1. Índices de CLIENTE en este momento ==
+
+INDEX_NAME           UNIQUENES VISIBILIT
+-------------------- --------- ---------
+IX_CLI_PAIS_CIUDAD   NONUNIQUE VISIBLE
+PK_CLIENTE           UNIQUE    VISIBLE
+UX_CLI_DNI           UNIQUE    VISIBLE
+UX_CLI_EMAIL         UNIQUE    VISIBLE
+== 2. Un teléfono real para la prueba (el del cliente 4242) ==
+
+
+
+== 3. Q5: lectura ==
+Q5 email o telefono            filas=      1  lecturas l??gicas=   1574  f??sicas=    0      7.8 ms
+                               plan: TABLE ACCESS FULL CLIENTE
+== 4. Coste de escritura: 1000 altas de cliente (se deshacen al medir) ==
+1000 altas de cliente          filas=  1000  lecturas l??gicas=  11213  bloques modificados= 10126  redo=  1334 KB    26.8 ms  | por fila: 10.1 bloques, 1366 bytes de redo
