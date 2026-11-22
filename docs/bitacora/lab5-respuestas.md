@@ -64,6 +64,8 @@ Propongo un índice sobre el teléfono del cliente (`ix_cli_telefono`) para Q5, 
 
 Mi conclusión es que compensa: pasa de 1486 a 6 lecturas a cambio de 2 bloques más por cada cliente nuevo.
 
+**Cierre (antes de empezar el Lab 6):** repetí la medida con `scripts/lab5/17-revision-v006.sql` sobre la base actual, sin el índice y con él. Sin índice Q5 leía 1574 bloques (TABLE ACCESS FULL); con V006 aplicada, 6 lecturas con un BITMAP OR entre UX_CLI_EMAIL e IX_CLI_TELEFONO. Las 1000 altas de cliente pasaron de 10,1 a 12,1 bloques modificados por fila y de 1366 a 1619 bytes de redo. Sale lo mismo que en el reto, así que fusiono V006. Si en el Tema 6 veo que no se usa, lo pongo INVISIBLE y lo quito. Evidencias: `docs/bitacora/lab5/evidencia/script/*_17-revision-v006-*.script.log` y el spool de V006.
+
 ### Parte H · Reto: Diagnostica sin ver el script
 
 Respuesta:
