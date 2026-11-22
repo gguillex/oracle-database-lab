@@ -156,14 +156,12 @@ Respuesta: está en `docs/runbooks/perdida-datafile.md`.
 
 Respuesta (evidencia `spool/..._15-healthcheck.spool.log`):
 
-| Error | ¿Qué es? | De dónde viene |
-|---|---|---|
-| ORA-63999 data file suffered media failure | Efecto del laboratorio | Simulacro D: borré `academia01.dbf` |
-| ORA-01110 data file 16 (academia01.dbf) | Efecto del laboratorio | Simulacro D |
-| ORA-01113 file 25 needs media recovery (tiendasur01.dbf) | Efecto del laboratorio | Al volver a abrir FREEPDB1 tras el simulacro D, Oracle repasó sus archivos; la PDB terminó abierta sin problemas |
-| ORA-00202 control03.ctl / ORA-205 al montar | Efecto del laboratorio | Simulacro B |
-| ORA-00800 Set Priority Failed (LGWR, VKTM) | Ruido conocido | Ya lo vi en el Lab 4: el contenedor no deja cambiar la prioridad de esos procesos |
-| ORA-16038, ORA-19809, ORA-19815 (no salen entre las 10 últimas filas) | Efecto del laboratorio | La FRA llena de la Parte L |
+- **ORA-63999 data file suffered media failure**: efecto del laboratorio. Simulacro D: borré `academia01.dbf`.
+- **ORA-01110 data file 16 (academia01.dbf)**: efecto del laboratorio. Simulacro D.
+- **ORA-01113 file 25 needs media recovery (tiendasur01.dbf)**: efecto del laboratorio. Al volver a abrir FREEPDB1 tras el simulacro D, Oracle repasó sus archivos; la PDB terminó abierta sin problemas.
+- **ORA-00202 control03.ctl / ORA-205 al montar**: efecto del laboratorio. Simulacro B.
+- **ORA-00800 Set Priority Failed (LGWR, VKTM)**: ruido conocido. Ya lo vi en el Lab 4: el contenedor no deja cambiar la prioridad de esos procesos.
+- **ORA-16038, ORA-19809, ORA-19815 (no salen entre las 10 últimas filas)**: efecto del laboratorio. La FRA llena de la Parte L.
 
 Ninguno es un problema real. Los 21 cambios de archivo de redo en una hora sí me preocuparían en una base de verdad: aquí los causaron la carga de TiendaSur y las pruebas, pero en producción querrían decir que el redo es pequeño para el trabajo que hay o que algún proceso está haciendo cambios masivos. Y si el bloque 7 saliera vacío en producción, es que no hay ninguna copia: ese mismo día haría una copia completa con RMAN, activaría la copia automática del control file y dejaría programada una copia diaria.
 
@@ -198,23 +196,14 @@ Lo que más me llevo: en el C el tiempo depende de lo grande que sea la base, y 
 
 ## Retrospectiva sin culpables: la FRA llena
 
-```
-## Incidente: la base deja de archivar porque la FRA se llena (laboratorio, provocado a propósito en la Parte L)
-- Impacto: dos grupos de redo se quedaron sin archivar. Si se hubiera seguido trabajando, las sesiones se
-  habrían quedado esperando sin dar error ("log file switch (archiving needed)"). No se perdió ningún dato.
-- Cómo se detectó: la sesión dio ORA-16038 y ORA-19809; antes, el alert log ya había avisado con ORA-19815
-  al 91,41 % y al 100 %.
-- Causa: el límite de la FRA se bajó a 2 MB, menos de lo que había que archivar. Además, antes de configurar
-  la FRA la base archivaba en $ORACLE_HOME/dbs/arch sin límite y sin que nadie lo vigilara
-  (18 archivados, 2247 MB).
-- Cómo se arregló: devolviendo el límite a 4 GB; la base volvió a archivar sola. La verificación final
-  comprueba que la configuración guardada sigue en 4 GB.
-- Qué cambia: la consulta de alerta del reto de la Parte P avisa antes de llegar al 85 %, y antes de repetir
-  cargas grandes hay que mirar cuánto ocupa la FRA. Queda pendiente borrar con RMAN los archivados viejos
-  de dbs/arch.
-- Qué aprendí: la primera vez no falló porque el archivado cupo por muy poco. El aviso llegó antes que el
-  problema, pero sin un runbook que lo mire nadie se habría enterado.
-```
+**Incidente:** la base deja de archivar porque la FRA se llena (laboratorio, provocado a propósito en la Parte L).
+
+- **Impacto:** dos grupos de redo se quedaron sin archivar. Si se hubiera seguido trabajando, las sesiones se habrían quedado esperando sin dar error ("log file switch (archiving needed)"). No se perdió ningún dato.
+- **Cómo se detectó:** la sesión dio ORA-16038 y ORA-19809; antes, el alert log ya había avisado con ORA-19815 al 91,41 % y al 100 %.
+- **Causa:** el límite de la FRA se bajó a 2 MB, menos de lo que había que archivar. Además, antes de configurar la FRA la base archivaba en $ORACLE_HOME/dbs/arch sin límite y sin que nadie lo vigilara (18 archivados, 2247 MB).
+- **Cómo se arregló:** devolviendo el límite a 4 GB; la base volvió a archivar sola. La verificación final comprueba que la configuración guardada sigue en 4 GB.
+- **Qué cambia:** la consulta de alerta del reto de la Parte P avisa antes de llegar al 85 %, y antes de repetir cargas grandes hay que mirar cuánto ocupa la FRA. Queda pendiente borrar con RMAN los archivados viejos de dbs/arch.
+- **Qué aprendí:** la primera vez no falló porque el archivado cupo por muy poco. El aviso llegó antes que el problema, pero sin un runbook que lo mire nadie se habría enterado.
 
 ## Preguntas de comprobación
 
@@ -377,91 +366,275 @@ En el C tardé 61 s y perdí todo lo hecho desde la copia (aquí solo 1 s, porqu
 
 **22. Clasifica cada error ORA- del bloque 5 de tu runbook: incidente real, efecto del laboratorio o ruido conocido.**
 
-Respuesta: está en la tabla del punto de control de la Parte P. Todos los ORA- del bloque 5 los provocaron mis propias pruebas (simulacros B y D y la FRA llena), salvo ORA-00800, que es ruido conocido del contenedor desde el Lab 4. Ninguno es un problema real.
+Respuesta: está en la lista del punto de control de la Parte P. Todos los ORA- del bloque 5 los provocaron mis propias pruebas (simulacros B y D y la FRA llena), salvo ORA-00800, que es ruido conocido del contenedor desde el Lab 4. Ninguno es un problema real.
 
 ## Preguntas tipo examen de cada Parte
 
-**B1.** Letra: **B**. Si Oracle esperaba 25 000 filas y salieron 20, es que no sabía que esa columna está muy desequilibrada: le falta el histograma. Sin él supone que todos los valores salen lo mismo (V004 lo evita poniendo histograma en el estado, Parte B).
+**B1.** Un plan real muestra E-Rows = 25 000 y A-Rows = 20 en el paso de acceso por índice sobre la columna estado. ¿Cuál es la causa más probable?
 
-**C1.** Letra: **C**. BLEVEL 2 son 3 niveles de índice; más el bloque de la tabla, 4 lecturas, como medí en la Parte C.
+Letra: **B**
+Justificación: Si Oracle esperaba 25 000 filas y salieron 20, es que no sabía que esa columna está muy desequilibrada: le falta el histograma. Sin él supone que todos los valores salen lo mismo (V004 lo evita poniendo histograma en el estado, Parte B).
 
-**C2.** Letra: **C**. Con 500 hijos por bloque, dos niveles de rama solo llegan a 250 000 hojas; para 2 000 000 hacen falta tres niveles de rama más las hojas: 4 niveles.
+**C1.** Un índice tiene BLEVEL = 2 en DBA_INDEXES. ¿Cuántas lecturas lógicas necesita, como mínimo, una búsqueda por igualdad sobre su clave única que devuelve una columna que no está en el índice?
 
-**D1.** Letra: **B**. Pocos valores distintos, carga de noche y filtros combinados: un bitmap por columna, que Oracle combina (en la Parte D bajó de 4073 a 528 lecturas).
+Letra: **C**
+Justificación: BLEVEL 2 son 3 niveles de índice; más el bloque de la tabla, 4 lecturas, como medí en la Parte C.
 
-**D2.** Letras: **A y C**. El cubriente evita ir a la tabla (Q7 en 3 lecturas), pero cada cambio en sus columnas cuesta más (con V005, cambiar el estado pasó a 8,1 bloques).
+**C2.** Un índice tiene 2 000 000 de hojas y un factor de ramificación máximo de 500. ¿Qué altura tendrá?
 
-**E1.** Letra: **B**. Con las filas tan desordenadas, el índice solo compensa por debajo del 0,8 % (1/125), y el 3 % está muy por encima: mejor leer la tabla entera. Reconstruir el índice no lo arregla (Parte E).
+Letra: **C**
+Justificación: Con 500 hijos por bloque, dos niveles de rama solo llegan a 250 000 hojas; para 2 000 000 hacen falta tres niveles de rama más las hojas: 4 niveles.
 
-**F1.** Letra: **B**. Comparar un texto con un número hace que Oracle convierta la columna a número y ya no pueda usar el índice (Q3, Parte F).
+**D1.** Una tabla de hechos se carga una vez por noche y los analistas filtran por combinaciones de región (6 valores), canal (3) y año (5). ¿Qué tipo de índice es más apropiado en esas columnas?
 
-**F2.** Letras: **A y C**. Las dos dejan la columna tal cual y abarcan el día entero; la B solo encuentra la medianoche, y la D y la E siguen tocando la columna.
+Letra: **B**
+Justificación: Pocos valores distintos, carga de noche y filtros combinados: un bitmap por columna, que Oracle combina (en la Parte D bajó de 4073 a 528 lecturas).
 
-**G1.** Letra: **B**. Hacerlo invisible: Oracle deja de usarlo pero lo sigue manteniendo, y se vuelve atrás al momento con VISIBLE (Parte G).
+**D2.** ¿Qué dos afirmaciones sobre un índice cubriente son correctas? (Elige dos.)
 
-**G2.** Letra: **B**. Cada índice suma unos 2 bloques por alta: 500 × 2 = 1000 bloques más por segundo.
+Letra: **A y C**
+Justificación: El cubriente evita ir a la tabla (Q7 en 3 lecturas), pero cada cambio en sus columnas cuesta más (con V005, cambiar el estado pasó a 8,1 bloques).
 
-**H1.** Letra: **B**. COALESCE arregla la cola sin parar el servicio y gastando poco (de 226 a 2 lecturas, Parte H).
+**E1.** Un índice tiene CLUSTERING_FACTOR = 9 950 000 sobre una tabla de 10 000 000 filas y 80 000 bloques. Una consulta pide el 3 % de las filas por ese índice. ¿Qué plan es razonable?
 
-**H2.** Letras: **A y C**. Reparte las inserciones para que no se peleen por la misma hoja, pero ya no sirve para buscar por rangos (866 lecturas frente a 4, Parte H).
+Letra: **B**
+Justificación: Con las filas tan desordenadas, el índice solo compensa por debajo del 0,8 % (1/125), y el 3 % está muy por encima: mejor leer la tabla entera. Reconstruir el índice no lo arregla (Parte E).
 
-**I1.** Letra: **B**. Compara el número que tiene el control file con el de la cabecera de cada archivo (Parte I).
+**F1.** La columna num_factura es VARCHAR2(10) y tiene un índice. ¿Qué predicado impide usarlo?
 
-**J1.** Letra: **B**. Si falla una copia del control file con la base abierta, la instancia se para; hay que reponerla (o quitarla de la lista) y arrancar.
+Letra: **B**
+Justificación: Comparar un texto con un número hace que Oracle convierta la columna a número y ya no pueda usar el índice (Q3, Parte F).
 
-**J2.** Letras: **A y C**. Guarda dónde están los datafiles y el redo, y hasta dónde está guardado cada uno; lo vi en el `CREATE CONTROLFILE` de la Parte J.
+**F2.** ¿Qué dos reescrituras convierten WHERE TRUNC(fecha) = DATE '2026-10-18' en una condición sargable equivalente? (Elige dos.)
 
-**K1.** Letra: **C**. Un grupo ACTIVE tiene cambios que aún podrían hacer falta si la base se cae (por eso me dio ORA-01624 en la Parte K).
+Letra: **A y C**
+Justificación: Las dos dejan la columna tal cual y abarcan el día entero; la B solo encuentra la medianoche, y la D y la E siguen tocando la columna.
 
-**L1.** Letra: **B**. Primero hay que decirle el tamaño y luego la ruta (me dio ORA-19802 al hacerlo al revés, Parte L).
+**G1.** Quieres comprobar si la aplicación sigue necesitando un índice antes de borrarlo, sin dejar de mantenerlo y pudiendo dar marcha atrás al instante. ¿Qué haces?
 
-**L2.** Letras: **A y C**. Darle más espacio si hay disco, o copiar los archivados con RMAN y borrarlos; nunca borrarlos a mano con rm (yo lo arreglé subiendo a 4 GB).
+Letra: **B**
+Justificación: Hacerlo invisible: Oracle deja de usarlo pero lo sigue manteniendo, y se vuelve atrás al momento con VISIBLE (Parte G).
 
-**M1.** Letra: **C**. Ve el valor de antes, reconstruido con el undo (paso 1 de la Parte M).
+**G2.** Una tabla tiene 3 índices B-tree y recibe 500 INSERT de una fila por segundo. Con lo medido en esta parte, ¿cuántos bloques modificados por segundo, aproximadamente, añade un cuarto índice?
 
-**M2.** Letra: **C**. El DELETE: 428 bloques de undo, frente a 140 del INSERT y 71 del UPDATE (Parte M).
+Letra: **B**
+Justificación: Cada índice suma unos 2 bloques por alta: 500 × 2 = 1000 bloques más por segundo.
 
-**M3.** Letras: **B y D**. Guardar el undo más tiempo y con más espacio, y garantizarlo si el informe es crítico.
+**H1.** Una tabla de eventos recibe claves crecientes y cada noche se borran los eventos de más de 30 días. La consulta "evento más antiguo pendiente" se ha vuelto lenta. ¿Qué acción resuelve el síntoma en línea y con el menor coste?
 
-**N1.** Letra: **A**. Que el redo está escrito en disco; los datos todavía no (0 bloques escritos tras el COMMIT, Parte N).
+Letra: **B**
+Justificación: COALESCE arregla la cola sin parar el servicio y gastando poco (de 226 a 2 lecturas, Parte H).
 
-**N2.** Letras: **B y C**. En un checkpoint y cuando se queda sin memoria libre; nunca por un COMMIT.
+**H2.** ¿Qué dos afirmaciones sobre un índice REVERSE son correctas? (Elige dos.)
 
-**O1.** Letra: **B**. Oracle rehace y deshace solo y la base abre sin ayuda (simulacro A).
+Letra: **A y C**
+Justificación: Reparte las inserciones para que no se peleen por la misma hoja, pero ya no sirve para buscar por rangos (866 lecturas frente a 4, Parte H).
 
-**O2.** Letras: **B y D**. Copiar una de las copias buenas en su sitio, o quitarla de la lista de control files (simulacro B).
+**I1.** Al abrir la base, ¿qué compara Oracle para decidir si un datafile necesita recuperación?
 
-**O3.** Letra: **B**. Poner el archivo fuera de servicio, restaurarlo, aplicarle el redo y volver a ponerlo en servicio, todo con la base abierta (simulacro D y runbook).
+Letra: **B**
+Justificación: Compara el número que tiene el control file con el de la cabecera de cada archivo (Parte I).
 
-**O4.** Letra: **D**. Con RMAN se puede recuperar solo esa tabla tal como estaba antes del borrado, sin tocar lo demás; la papelera no sirve porque se borró con PURGE.
+**J1.** Una de las tres copias del control file se corrompe con la base abierta. ¿Qué ocurre?
+
+Letra: **B**
+Justificación: Si falla una copia del control file con la base abierta, la instancia se para; hay que reponerla (o quitarla de la lista) y arrancar.
+
+**J2.** ¿Qué dos datos guarda el control file? (Elige dos.)
+
+Letra: **A y C**
+Justificación: Guarda dónde están los datafiles y el redo, y hasta dónde está guardado cada uno; lo vi en el `CREATE CONTROLFILE` de la Parte J.
+
+**K1.** Un grupo de redo tiene estado ACTIVE. ¿Qué afirmación es correcta?
+
+Letra: **C**
+Justificación: Un grupo ACTIVE tiene cambios que aún podrían hacer falta si la base se cae (por eso me dio ORA-01624 en la Parte K).
+
+**L1.** Un DBA ejecuta ALTER SYSTEM SET db_recovery_file_dest = '/u03/fra'; en una base sin FRA configurada y recibe un error. ¿Cuál es la causa?
+
+Letra: **B**
+Justificación: Primero hay que decirle el tamaño y luego la ruta (me dio ORA-19802 al hacerlo al revés, Parte L).
+
+**L2.** Las sesiones de una base en ARCHIVELOG se quedan esperando en "log file switch (archiving needed)" y las nuevas conexiones reciben ORA-00257. ¿Qué dos acciones resuelven el problema? (Elige dos.)
+
+Letra: **A y C**
+Justificación: Darle más espacio si hay disco, o copiar los archivados con RMAN y borrarlos; nunca borrarlos a mano con rm (yo lo arreglé subiendo a 4 GB).
+
+**M1.** La sesión A ejecuta un UPDATE de una fila y no confirma. La sesión B consulta esa fila. ¿Qué ve B?
+
+Letra: **C**
+Justificación: Ve el valor de antes, reconstruido con el undo (paso 1 de la Parte M).
+
+**M2.** ¿Qué operación de 10 000 filas genera, en general, MÁS undo?
+
+Letra: **C**
+Justificación: El DELETE: 428 bloques de undo, frente a 140 del INSERT y 71 del UPDATE (Parte M).
+
+**M3.** Un informe nocturno falla con ORA-01555. ¿Qué dos medidas son adecuadas? (Elige dos.)
+
+Letra: **B y D**
+Justificación: Guardar el undo más tiempo y con más espacio, y garantizarlo si el informe es crítico.
+
+**N1.** Una sesión recibe "Commit complete". ¿Qué está garantizado en ese momento?
+
+Letra: **A**
+Justificación: Que el redo está escrito en disco; los datos todavía no (0 bloques escritos tras el COMMIT, Parte N).
+
+**N2.** ¿En qué dos situaciones escribe DBWn bloques sucios en los datafiles? (Elige dos.)
+
+Letra: **B y C**
+Justificación: En un checkpoint y cuando se queda sin memoria libre; nunca por un COMMIT.
+
+**O1.** Tras un corte de luz, el DBA ejecuta STARTUP. ¿Qué ocurre?
+
+Letra: **B**
+Justificación: Oracle rehace y deshace solo y la base abre sin ayuda (simulacro A).
+
+**O2.** Una base tiene tres copias del control file. Una se borra con la base cerrada y STARTUP da ORA-00205. ¿Qué dos acciones permiten abrir la base sin perder datos? (Elige dos.)
+
+Letra: **B y D**
+Justificación: Copiar una de las copias buenas en su sitio, o quitarla de la lista de control files (simulacro B).
+
+**O3.** En una base en ARCHIVELOG se pierde el datafile de un tablespace de aplicación. ¿Cuál es la secuencia que lo recupera sin cerrar la base y sin perder datos?
+
+Letra: **B**
+Justificación: Poner el archivo fuera de servicio, restaurarlo, aplicarle el redo y volver a ponerlo en servicio, todo con la base abierta (simulacro D y runbook).
+
+**O4.** Un usuario ejecutó DROP TABLE ventas PURGE; hace 10 minutos. La base está en ARCHIVELOG y hay copias de RMAN. ¿Qué opción recupera la tabla sin perder los cambios hechos en otras tablas?
+
+Letra: **D**
+Justificación: Con RMAN se puede recuperar solo esa tabla tal como estaba antes del borrado, sin tocar lo demás; la papelera no sirve porque se borró con PURGE.
 
 ## Simulacro de examen 1Z0-182 (S1-S26)
 
-| Pregunta | Letra | Por qué | Dónde lo comprobé |
-|---|---|---|---|
-| S1 | B | Si el CF es casi igual a las filas, casi cada fila está en un bloque distinto | Parte E (IX_PED_CLIENTE, CF 999 041) |
-| S2 | A y C | Un índice sobre la función, o aplicar la función al dato que llega y no a la columna | Parte D (Q1 con índice funcional) y Parte F (Q1 reescrita) |
-| S3 | B | Oracle convierte la columna a número y el índice deja de servir | Parte F, regla 3 |
-| S4 | B | Bitmap: pocos valores distintos y carga de noche | Parte D, Q14 |
-| S5 | B | Puede "saltar" por cada país (SKIP SCAN) | Parte D, Q6 solo por ciudad |
-| S6 | B | Hacerlo invisible y observar | Parte G, pregunta 5 |
-| S7 | A y C | COALESCE y SHRINK SPACE, los dos sin parar el servicio | Parte H (`07c-remedios`) |
-| S8 | B | Reparte las inserciones, pero ya no sirve para rangos | Parte H (866 frente a 4 lecturas) |
-| S9 | C | Cambiar una columna que no está en ningún índice solo toca la tabla | Parte G (cambiar el estado: 2 bloques) |
-| S10 | B | Cuántos hijos caben por bloque depende de lo que mide la clave | Parte C (reto UX_CLI_EMAIL: 441 frente a 543) |
-| S11 | A y C | La IOT guarda las filas dentro del propio índice y se ahorra ir a la tabla | Parte D, Q15 (3 lecturas frente a 4) |
-| S12 | B | El número del control file frente al de la cabecera del archivo | Parte I |
-| S13 | C | CKPT es quien apunta el checkpoint | Partes I y N |
-| S14 | B y E | En NOMOUNT solo contestan las vistas de la instancia y de los parámetros | Parte O, simulacro B (estado STARTED) |
-| S15 | B | Parar, montar, activar ARCHIVELOG y abrir | Parte L |
-| S16 | B | CLEAR LOGFILE GROUP vuelve a crear el grupo | Parte K |
-| S17 | A y C | Para que otros lean el valor de antes y para mirar al pasado (flashback) | Parte M, pasos 1 y 6 |
-| S18 | B | El undo también puede perderse en una caída, así que hay que poder rehacerlo | Parte M |
-| S19 | A | El redo está escrito en disco | Parte N |
-| S20 | A | Más checkpoints pequeños y recuperación más rápida | Parte I |
-| S21 | B | No se puede archivar porque la FRA está llena | Parte L |
-| S22 | B | Lo primero, poner ese archivo fuera de servicio | Parte O, simulacro D y runbook |
-| S23 | B | Si es SYSTEM, hay que hacerlo con la base montada | Parte O |
-| S24 | B | Sin ARCHIVELOG solo queda la última copia en frío y se pierde lo posterior | Parte O, simulacro C |
-| S25 | B y D | Más undo y garantizar que se conserve | Parte M |
-| S26 | A | V$RECOVERY_AREA_USAGE | Parte L |
+Para cada pregunta pongo la letra, el porqué y la Parte del laboratorio donde lo comprobé.
+
+**S1.** Un índice tiene un clustering factor muy cercano al número de filas de la tabla. ¿Qué afirmación es correcta?
+
+Letra: **B**
+Justificación: Si el CF es casi igual a las filas, casi cada fila está en un bloque distinto. Lo comprobé en: Parte E (IX_PED_CLIENTE, CF 999 041).
+
+**S2.** La consulta SELECT * FROM cliente WHERE UPPER(email) = :e hace un recorrido completo aunque existe un índice sobre EMAIL. ¿Qué dos cambios permiten usar un índice? (Elige dos.)
+
+Letra: **A y C**
+Justificación: Un índice sobre la función, o aplicar la función al dato que llega y no a la columna. Lo comprobé en: Parte D (Q1 con índice funcional) y Parte F (Q1 reescrita).
+
+**S3.** CODIGO_POSTAL es VARCHAR2 y tiene índice. La consulta WHERE codigo_postal = 30001 no lo usa. ¿Por qué?
+
+Letra: **B**
+Justificación: Oracle convierte la columna a número y el índice deja de servir. Lo comprobé en: Parte F, regla 3.
+
+**S4.** ¿En qué situación es más apropiado un índice bitmap?
+
+Letra: **B**
+Justificación: Bitmap: pocos valores distintos y carga de noche. Lo comprobé en: Parte D, Q14.
+
+**S5.** Existe un índice compuesto (pais, ciudad). PAIS tiene 5 valores distintos. Una consulta filtra solo por CIUDAD. ¿Qué operación puede elegir el optimizador?
+
+Letra: **B**
+Justificación: Puede "saltar" por cada país (SKIP SCAN). Lo comprobé en: Parte D, Q6 solo por ciudad.
+
+**S6.** Quieres comprobar si la aplicación necesita un índice antes de borrarlo, con marcha atrás inmediata. ¿Qué haces?
+
+Letra: **B**
+Justificación: Hacerlo invisible y observar. Lo comprobé en: Parte G, pregunta 5.
+
+**S7.** Una tabla de mensajes inserta por un extremo y borra por el otro. El índice de la clave crece aunque el número de filas es estable. ¿Qué dos acciones lo resuelven sin bloquear la tabla? (Elige dos.)
+
+Letra: **A y C**
+Justificación: COALESCE y SHRINK SPACE, los dos sin parar el servicio. Lo comprobé en: Parte H (`07c-remedios`).
+
+**S8.** ¿Qué efecto tiene un índice de clave invertida (REVERSE) sobre una clave secuencial?
+
+Letra: **B**
+Justificación: Reparte las inserciones, pero ya no sirve para rangos. Lo comprobé en: Parte H (866 frente a 4 lecturas).
+
+**S9.** Una tabla tiene 9 índices. ¿Qué operación NO se encarece por el número de índices?
+
+Letra: **C**
+Justificación: Cambiar una columna que no está en ningún índice solo toca la tabla. Lo comprobé en: Parte G (cambiar el estado: 2 bloques).
+
+**S10.** ¿Qué determina principalmente la altura de un índice B-tree con un número de filas dado?
+
+Letra: **B**
+Justificación: Cuántos hijos caben por bloque depende de lo que mide la clave. Lo comprobé en: Parte C (reto UX_CLI_EMAIL: 441 frente a 543).
+
+**S11.** ¿Qué dos afirmaciones sobre una tabla organizada como índice (IOT) son correctas? (Elige dos.)
+
+Letra: **A y C**
+Justificación: La IOT guarda las filas dentro del propio índice y se ahorra ir a la tabla. Lo comprobé en: Parte D, Q15 (3 lecturas frente a 4).
+
+**S12.** Al abrir la base, ¿qué compara Oracle para decidir si un datafile necesita recuperación?
+
+Letra: **B**
+Justificación: El número del control file frente al de la cabecera del archivo. Lo comprobé en: Parte I.
+
+**S13.** ¿Qué proceso registra el checkpoint en el control file y en las cabeceras de los datafiles?
+
+Letra: **C**
+Justificación: CKPT es quien apunta el checkpoint. Lo comprobé en: Partes I y N.
+
+**S14.** La instancia está en estado NOMOUNT. ¿Qué dos consultas responden sin error? (Elige dos.)
+
+Letra: **B y E**
+Justificación: En NOMOUNT solo contestan las vistas de la instancia y de los parámetros. Lo comprobé en: Parte O, simulacro B (estado STARTED).
+
+**S15.** ¿Cuál es la secuencia correcta para activar el modo ARCHIVELOG?
+
+Letra: **B**
+Justificación: Parar, montar, activar ARCHIVELOG y abrir. Lo comprobé en: Parte L.
+
+**S16.** Se pierde el único miembro de un grupo de redo INACTIVE ya archivado. ¿Qué se hace?
+
+Letra: **B**
+Justificación: CLEAR LOGFILE GROUP vuelve a crear el grupo. Lo comprobé en: Parte K.
+
+**S17.** ¿Qué dos usos tiene el undo además de permitir ROLLBACK? (Elige dos.)
+
+Letra: **A y C**
+Justificación: Para que otros lean el valor de antes y para mirar al pasado (flashback). Lo comprobé en: Parte M, pasos 1 y 6.
+
+**S18.** ¿Por qué un cambio en el undo también genera redo?
+
+Letra: **B**
+Justificación: El undo también puede perderse en una caída, así que hay que poder rehacerlo. Lo comprobé en: Parte M.
+
+**S19.** Una sesión recibe "Commit complete". ¿Qué está garantizado?
+
+Letra: **A**
+Justificación: El redo está escrito en disco. Lo comprobé en: Parte N.
+
+**S20.** El parámetro FAST_START_MTTR_TARGET se reduce de 300 a 30. ¿Qué efecto tiene?
+
+Letra: **A**
+Justificación: Más checkpoints pequeños y recuperación más rápida. Lo comprobé en: Parte I.
+
+**S21.** Las sesiones esperan en "log file switch (archiving needed)". ¿Cuál es la causa más probable?
+
+Letra: **B**
+Justificación: No se puede archivar porque la FRA está llena. Lo comprobé en: Parte L.
+
+**S22.** Una consulta falla con ORA-01116, ORA-01110 y ORA-27041 sobre el datafile de un tablespace de aplicación. La base está en ARCHIVELOG y hay copias de RMAN. ¿Qué es lo PRIMERO que haces para mantener el resto del servicio?
+
+Letra: **B**
+Justificación: Lo primero, poner ese archivo fuera de servicio. Lo comprobé en: Parte O, simulacro D y runbook.
+
+**S23.** Se pierde un datafile del tablespace SYSTEM. ¿Qué secuencia es correcta?
+
+Letra: **B**
+Justificación: Si es SYSTEM, hay que hacerlo con la base montada. Lo comprobé en: Parte O.
+
+**S24.** En NOARCHIVELOG se pierde un datafile de aplicación. ¿Qué afirmación es correcta?
+
+Letra: **B**
+Justificación: Sin ARCHIVELOG solo queda la última copia en frío y se pierde lo posterior. Lo comprobé en: Parte O, simulacro C.
+
+**S25.** ¿Qué dos medidas son adecuadas ante ORA-01555 en un informe nocturno? (Elige dos.)
+
+Letra: **B y D**
+Justificación: Más undo y garantizar que se conserve. Lo comprobé en: Parte M.
+
+**S26.** ¿Qué vista muestra el uso de la FRA por tipo de archivo?
+
+Letra: **A**
+Justificación: V$RECOVERY_AREA_USAGE. Lo comprobé en: Parte L.
