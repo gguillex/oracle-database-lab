@@ -1,0 +1,19 @@
+== 1. Índices de CLIENTE en este momento ==
+
+INDEX_NAME           UNIQUENES VISIBILIT
+-------------------- --------- ---------
+IX_CLI_PAIS_CIUDAD   NONUNIQUE VISIBLE
+IX_CLI_TELEFONO      NONUNIQUE VISIBLE
+PK_CLIENTE           UNIQUE    VISIBLE
+UX_CLI_DNI           UNIQUE    VISIBLE
+UX_CLI_EMAIL         UNIQUE    VISIBLE
+== 2. Un teléfono real para la prueba (el del cliente 4242) ==
+
+
+
+== 3. Q5: lectura ==
+Q5 email o telefono            filas=      1  lecturas l??gicas=      6  f??sicas=    0       .3 ms
+                               plan: TABLE ACCESS BY INDEX ROWID BATCHED CLIENTE > BITMAP CONVERSION TO ROWIDS > BITMAP OR > BITMAP CONVERSION FROM ROWIDS > INDEX RANGE SCAN UX_CLI_EMAIL > BITMAP CONV
+ERSION FROM ROWIDS > INDEX RANGE SCAN IX_CLI_TELEFONO
+== 4. Coste de escritura: 1000 altas de cliente (se deshacen al medir) ==
+1000 altas de cliente          filas=  1000  lecturas l??gicas=  13240  bloques modificados= 12141  redo=  1581 KB    32.1 ms  | por fila: 12.1 bloques, 1619 bytes de redo
