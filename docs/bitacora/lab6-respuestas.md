@@ -21,13 +21,13 @@ La sección 4 de validar-arranque dice "desde el último arranque" pero me sacó
 
 3. Después del SCOPE = SPFILE, V$SPPARAMETER decía db_files = 250 y V$PARAMETER seguía en 200 (evidencia 02, parametros). El archivo tenía el valor nuevo pero la instancia seguía con el viejo, porque db_files es estático (por eso antes dio ORA-02095 con SCOPE = MEMORY). Sin el RESET, en el siguiente reinicio habría arrancado con 250.
 
-4. RESET quita la línea del SPFILE y deja el valor. Con db_files servía porque no estaba fijado: en mi copia init_desde_spfile.ora no aparece. Con processes no, porque sí estaba fijado (línea 31 de esa copia: `*.processes=200`). Un RESET de processes lo habría cambiado al valor por defecto en el próximo arranque.
+4. RESET quita la línea del SPFILE y deja el valor por defecto. Con db_files servía porque no estaba fijado: en mi copia init_desde_spfile.ora no aparece. Con processes no, porque sí estaba fijado (línea 31 de esa copia: `*.processes=200`). Un RESET de processes lo habría cambiado al valor por defecto en el próximo arranque.
 
 5. C##OPS_RO recibió ORA-01109: database not open (evidencia 02, estados-pdb, paso 4). La instancia decía "Database opened" porque eso es el CDB, pero FREEPDB1 se quedó en MOUNTED al no tener estado guardado. El listener conocía el servicio freepdb1 pero la PDB estaba cerrada.
 
 ## Partes D-E
 
-6. La sesión de la aplicación tenía SID 227, SPID 4096 y el evento PL/SQL lock timer, porque estaba en el SLEEP (evidencia 03, sesiones). USERNAME solo dice APP_ACADEMIA, que es la misma cuenta para toda la aplicación. Con el modulo, la accion y el client identifier se que era el cierre de periodo de matriculas y que era para ana.garcia.
+6. La sesión de la aplicación tenía SID 227, SPID 4096 y el evento PL/SQL lock timer, porque estaba en el SLEEP (evidencia 03, sesiones). USERNAME solo dice APP_ACADEMIA, que es la misma cuenta para toda la aplicación. Con el módulo, la acción y el client identifier sé que era el cierre de periodo de matrículas y que era para ana.garcia.
 
 7. Después de CANCEL SQL la aplicación tenía 1 transacción abierta y seguía conectada ("sigo viva"). Después de KILL SESSION ya no quedaba ninguna sesión. La fila 101 quedó en ACTIVO porque el UPDATE no estaba confirmado y al matar la sesión se deshizo.
 
