@@ -1,0 +1,14 @@
+== EVIDENCIA alumno=E024 hora=2026-11-23T00:00:55Z origen=08-auditoria-inc603
+== EVIDENCIA contenedor=babd017e3ab1 dbid=1509902213 arranque=2026-11-22T23:34:01 scn=7434500
+
+Session altered.
+
+
+EVENT_TIMESTAMP 	     DBUSERNAME OS_USERNAM CLIENT_PROGRAM_NAME		  ACTION_NAM SQL_TEXT
+---------------------------- ---------- ---------- ------------------------------ ---------- ------------------------------------------------------------
+23-NOV-26 12.00.07.922290 AM SYS	oracle	   sqlplus@babd017e3ab1 (TNS V1-V ALTER USER ALTER USER app_academia ACCOUNT LOCK
+						   3)
+
+
+1 row selected.
+

@@ -1,0 +1,12 @@
+== EVIDENCIA alumno=E024 hora=2026-11-22T23:59:36Z origen=08-inc602-intervencion
+== EVIDENCIA contenedor=babd017e3ab1 dbid=1509902213 arranque=2026-11-22T23:34:01 scn=7433500
+
+Session altered.
+
+
+PL/SQL procedure successfully completed.
+
+-- Acción preventiva: guardar el estado de la PDB CON el servicio arrancado (Parte C)
+
+Pluggable database altered.
+
