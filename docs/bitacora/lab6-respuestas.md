@@ -11,23 +11,23 @@ Errores que ya sé que son normales en mi entorno:
 - ORA-65019: me salió en validar-arranque, pero lo provoqué yo en el paso 2 de 02-estados-pdb al reabrir la PDB sin cerrarla.
 - Los de DBMS_QOPATCH que salen en el enunciado a mí no me salen.
 
-Una cosa que me llamó la atención: la sección 4 de validar-arranque dice "desde el último arranque" pero me sacó también errores de arranques anteriores. Creo que es por la zona horaria, porque SQLcl usa la hora de mi Ubuntu (UTC+1) y la ventana empieza una hora antes.
+La sección 4 de validar-arranque dice "desde el último arranque" pero me sacó también errores de arranques anteriores.
 
 ## Partes A-C
 
-1. Tenía 4 errores ORA- en 24 h, todos ORA-00800 de los dos arranques de ese día. No es una alarma por sí solo porque cada arranque mete dos de esos. Habría que preocuparse si sube sin reinicios o si aparece un error distinto.
+1. Tenía 4 errores ORA- en 24 h, todos ORA-00800 de los dos arranques de ese día. No es una alarma por sí solo porque cada arranque mete dos de esos.
 
 2. La ventana del miércoles (WEDNESDAY_WINDOW) empieza a las 22:00 y dura 4 horas (evidencia 01, spool de automatizacion). En ella corren las tres tareas de AutoTask: estadísticas del optimizador, Segment Advisor y SQL Tuning Advisor.
 
 3. Después del SCOPE = SPFILE, V$SPPARAMETER decía db_files = 250 y V$PARAMETER seguía en 200 (evidencia 02, parametros). El archivo tenía el valor nuevo pero la instancia seguía con el viejo, porque db_files es estático (por eso antes dio ORA-02095 con SCOPE = MEMORY). Sin el RESET, en el siguiente reinicio habría arrancado con 250.
 
-4. RESET quita la línea del SPFILE y deja el valor por defecto, no el anterior. Con db_files servía porque no estaba fijado: en mi copia init_desde_spfile.ora no aparece. Con processes no, porque sí estaba fijado (línea 31 de esa copia: `*.processes=200`). Un RESET de processes lo habría cambiado al valor por defecto en el próximo arranque.
+4. RESET quita la línea del SPFILE y deja el valor. Con db_files servía porque no estaba fijado: en mi copia init_desde_spfile.ora no aparece. Con processes no, porque sí estaba fijado (línea 31 de esa copia: `*.processes=200`). Un RESET de processes lo habría cambiado al valor por defecto en el próximo arranque.
 
 5. C##OPS_RO recibió ORA-01109: database not open (evidencia 02, estados-pdb, paso 4). La instancia decía "Database opened" porque eso es el CDB, pero FREEPDB1 se quedó en MOUNTED al no tener estado guardado. El listener conocía el servicio freepdb1 pero la PDB estaba cerrada.
 
 ## Partes D-E
 
-6. La sesión de la aplicación tenía SID 227, SPID 4096 y el evento PL/SQL lock timer, porque estaba en el SLEEP (evidencia 03, sesiones). USERNAME solo dice APP_ACADEMIA, que es la misma cuenta para toda la aplicación. Con MODULE (matriculas), ACTION (cierre-periodo) y CLIENT_IDENTIFIER (ana.garcia@ucam) sé qué estaba haciendo y para quién.
+6. La sesión de la aplicación tenía SID 227, SPID 4096 y el evento PL/SQL lock timer, porque estaba en el SLEEP (evidencia 03, sesiones). USERNAME solo dice APP_ACADEMIA, que es la misma cuenta para toda la aplicación. Con el modulo, la accion y el client identifier se que era el cierre de periodo de matriculas y que era para ana.garcia.
 
 7. Después de CANCEL SQL la aplicación tenía 1 transacción abierta y seguía conectada ("sigo viva"). Después de KILL SESSION ya no quedaba ninguna sesión. La fila 101 quedó en ACTIVO porque el UPDATE no estaba confirmado y al matar la sesión se deshizo.
 
@@ -54,13 +54,13 @@ V$DATAFILE da 17 desde la raíz y 10 desde la PDB aunque es el mismo usuario, po
 
 13. Estuvo suspendida unos 14 segundos, de 23:44:07 a 23:44:21 (evidencia 05, resumable). En el alert log quedó una línea de "was suspended" y otra de "was resumed" para la sesión carga-historico.
 
-14. Antes del DELETE: 20000 filas, 2944 bloques, 23 MB. Después del DELETE: 2000 filas pero los mismos 2944 bloques y 23 MB. Después del SHRINK: 2000 filas, 304 bloques y 2,4 MB, y la cuota usada bajó a 2,4 MB (evidencia 05, hwm-shrink). El DELETE no devuelve espacio porque los bloques siguen por debajo de la HWM; el SHRINK mueve las filas y baja la HWM.
+14. Antes del DELETE: 20000 filas, 2944 bloques, 23 MB. Después del DELETE: 2000 filas pero los mismos 2944 bloques y 23 MB. Después del SHRINK: 2000 filas, 304 bloques y 2,4 MB, y la cuota usada bajó a 2,4 MB (evidencia 05, hwm-shrink). El DELETE no devuelve espacio porque los bloques siguen por debajo de la HWM.
 
 15. El perfil DEFAULT tenía FAILED_LOGIN_ATTEMPTS 10, PASSWORD_LIFE_TIME 180, PASSWORD_LOCK_TIME 1, PASSWORD_GRACE_TIME 7, INACTIVE_ACCOUNT_TIME 365 y sin función de verificación (evidencia 06, gobierno-acceso). En PRF_PERSONAS:
 - 3 intentos fallidos: una persona no se equivoca tantas veces seguidas, y si pasa puede ser alguien probando contraseñas. Lo vi con Ana, que se quedó en LOCKED(TIMED).
 - INACTIVE_ACCOUNT_TIME 90: si alguien de secretaría no entra en tres meses, seguramente ya no está, y la cuenta se bloquea sola aunque nadie tramite la baja.
 
-16. Ana leyó 60000 matrículas porque su rol incluye ROL_LECTURA_ACADEMIA, que tiene SELECT ANY TABLE ON SCHEMA admin_academia, y eso vale para todas las tablas del esquema (evidencia 06, probar-acceso). Al cambiar el nombre le salió ORA-41900, falta el privilegio UPDATE, porque solo puede cambiar la columna ESTADO.
+16. Ana leyó 60000 matrículas porque su rol incluye ROL_LECTURA_ACADEMIA, y eso vale para todas las tablas del esquema (evidencia 06, probar-acceso). Al cambiar el nombre le salió ORA-41900, falta el privilegio UPDATE, porque solo puede cambiar la columna ESTADO.
 
 ## Partes H-I
 
