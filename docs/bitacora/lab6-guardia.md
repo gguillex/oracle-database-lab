@@ -1,30 +1,30 @@
-# Lab 6 · Guardia nocturna: postmortems
+# Lab 6 · Guardia: postmortems
 
-Los tres incidentes los abrí con `scripts/lab6/08-guardia.sh incidente N` y los resolví sin usar `limpiar`. Las evidencias están en `docs/bitacora/lab6/evidencia/script/` (todas las `*_08-*`). Antes de tocar nada pasé siempre `08-diagnostico.sql` con C##OPS_RO, y después de la intervención lo volví a pasar para validar.
+Los tres incidentes los abrí con 08-guardia.sh y no usé limpiar. Antes de tocar nada pasé 08-diagnostico.sql con C##OPS_RO y después lo volví a pasar para comprobar. Las evidencias son las que empiezan por 08.
 
-## INC-601 · La pantalla de secretaría se queda colgada al guardar la ficha del alumno 101
-- Detección: 23:56 UTC · Ana García (secretaría) abre un ticket: al guardar la ficha del alumno 101 la pantalla se queda colgada, y ya ha reiniciado su ordenador dos veces.
-- Impacto: Ana no pudo guardar la ficha durante algo más de un minuto (a las 23:56:55 llevaba 22 s esperando y su última espera en ASH es de las 23:57:34). El resto de la base funcionaba; la lista de turno marcaba 1 sesión bloqueada.
-- Diagnóstico: en `20261122T235655Z_08-diagnostico` la sesión 177 de ANA_GARCIA (módulo `secretaria`, acción `ficha-alumno`) esperaba en `enq: TX - row lock contention` con BLOQ = 176. La 176 era APP_ACADEMIA (`matriculas` / `cierre-periodo`): tenía el TX en modo 6 con block = 1 y estaba en `PL/SQL lock timer`, o sea, parada sin hacer nada pero con la transacción abierta (1 bloque y 1 registro de undo desde las 23:56:32). La fila era la de ACA_ESTUDIANTES en archivo 1024, bloque 783, fila 5.
-- Causa raíz: el proceso de cierre de periodo de la aplicación modificó la fila del alumno 101 y se quedó esperando sin hacer COMMIT ni ROLLBACK, así que retuvo el bloqueo de fila. No era un fallo de la base ni del ordenador de Ana: un proceso por lotes que deja una transacción abierta mientras espera bloquea a cualquiera que toque esas filas.
-- Intervención: `ALTER SYSTEM KILL SESSION '176,1927' IMMEDIATE;` como SYSDBA a las 23:57:35 (`*_08-inc601-intervencion`). Era lo más pequeño que lo resolvía: CANCEL SQL no servía porque cancela la llamada pero deja la transacción y el bloqueo (lo vi en la Parte D), y la sesión bloqueadora solo tenía una fila sin confirmar, así que el rollback era inmediato. No toqué la sesión de Ana ni la instancia.
-- Validación: en `20261122T235818Z_08-diagnostico` ya no hay nadie esperando ni bloqueos TX; ASH deja la última espera de Ana a las 23:57:34, un segundo antes de la intervención. La fila 101 quedó en ACTIVO, que es lo que Ana quería guardar.
-- Acción preventiva: que el cierre de periodo confirme o deshaga antes de cualquier espera (nada de transacciones abiertas mientras duerme) y que corra fuera del horario de secretaría. Añadir a la guardia una alerta cuando una sesión lleve más de 60 s en `enq: TX` (la sección 6 de la lista de turno ya lo cuenta).
+## INC-601 · La pantalla de secretaría se queda colgada
+- Detección: 23:56 UTC. Ana García avisa de que al guardar la ficha del alumno 101 se le queda colgada la pantalla.
+- Impacto: Ana no pudo guardar durante más o menos un minuto. El resto funcionaba; la lista de turno daba 1 sesión bloqueada.
+- Diagnóstico: la sesión 177 de Ana estaba en enq: TX - row lock contention y la bloqueaba la 176. La 176 era APP_ACADEMIA con módulo matriculas y acción cierre-periodo, en PL/SQL lock timer (dormida) pero con una transacción abierta de 1 fila.
+- Causa raíz: el proceso de cierre de periodo cambió la fila del alumno 101 y se quedó esperando sin hacer commit, así que tenía la fila bloqueada. No era un problema de la base ni del ordenador de Ana.
+- Intervención: ALTER SYSTEM KILL SESSION '176,1927' IMMEDIATE. CANCEL SQL no valía porque deja la transacción abierta (lo vimos en la Parte D), y la 176 solo tenía una fila sin confirmar, así que deshacerla era inmediato.
+- Validación: al repetir el diagnóstico ya no había esperas ni bloqueos, y la fila 101 estaba en ACTIVO.
+- Acción preventiva: que el cierre de periodo haga commit antes de quedarse esperando y que no se lance en horario de secretaría. Y mirar en la guardia las sesiones que llevan mucho rato en enq: TX.
 
 ## INC-602 · La aplicación no conecta: ORA-12514
-- Detección: 23:58 UTC · el equipo de matrículas avisa de que ninguna instancia de la aplicación conecta y el error es ORA-12514. Preguntan si la base está caída.
-- Impacto: la aplicación de matrículas no pudo abrir ninguna conexión durante unos 65 s (el alert log dice `Stopped service academia_app` a las 23:58:31 y `Started` a las 23:59:36). Los demás usuarios, que entran por freepdb1, no se vieron afectados.
-- Diagnóstico: la lista de turno dice que la base no estaba caída (FREE OPEN/ALLOWED, FREEPDB1 READ WRITE sin RESTRICTED). `lsnrctl status` anunciaba FREE, FREEXDB y freepdb1, pero no academia_app. En `20261122T235843Z_08-diagnostico`, la sección 6 daba academia_app con ARRANCADO = NO: el servicio existía en la PDB pero estaba parado. Con `app.sh` reproduje el error: «el servicio academia_app no está registrado con el listener».
-- Causa raíz: alguien paró el servicio de la aplicación (DBMS_SERVICE.STOP_SERVICE) y no teníamos nada que comprobara que los servicios que existen están arrancados. ORA-12514 lo da el listener porque no conoce el servicio, no la base.
-- Intervención: como SYSDBA, en FREEPDB1, `EXEC DBMS_SERVICE.START_SERVICE('academia_app')` (`*_08-inc602-intervencion`). Arrancar solo ese servicio era lo mínimo: reiniciar la base no hacía falta y habría echado a todo el mundo.
-- Validación: el listener vuelve a anunciar academia_app como READY, la sección 6 de `20261122T235945Z_08-diagnostico` lo da como SI y la aplicación vuelve a entrar con `app.sh` (APP_ACADEMIA en FREEPDB1).
-- Acción preventiva: justo después hice `ALTER PLUGGABLE DATABASE FREEPDB1 SAVE STATE` para que, tras un reinicio, la PDB vuelva con academia_app arrancado (lo de la Parte C). Además, añadir a la lista de turno la comprobación de la sección 6 (servicios que existen y no están arrancados) y que parar un servicio de producción pase por un cambio planificado.
+- Detección: 23:58 UTC. El equipo de matrículas dice que la aplicación no conecta y da ORA-12514.
+- Impacto: la aplicación no pudo conectar durante algo más de un minuto (en el alert log el servicio se para a las 23:58:31 y lo arranqué a las 23:59:36). Lo que entraba por freepdb1 no se vio afectado.
+- Diagnóstico: la base no estaba caída, la lista de turno daba FREE abierta y FREEPDB1 en READ WRITE. En lsnrctl status no salía academia_app y en el diagnóstico (sección 6) salía con ARRANCADO = NO. Con app.sh me salía el mismo ORA-12514.
+- Causa raíz: alguien paró el servicio academia_app y no había nada que avisara de que un servicio estaba parado.
+- Intervención: DBMS_SERVICE.START_SERVICE('academia_app') en FREEPDB1. No hacía falta reiniciar nada.
+- Validación: academia_app vuelve a salir READY en el listener, la sección 6 lo da como arrancado y la aplicación entra con app.sh.
+- Acción preventiva: hice SAVE STATE para que el servicio vuelva solo tras un reinicio (lo de la Parte C), y añadiría a la lista de turno la comprobación de servicios parados.
 
 ## INC-603 · La aplicación no entra: ORA-28000
-- Detección: 00:00 UTC · el equipo de matrículas dice que, tras el despliegue, la aplicación recibe ORA-28000 y que no han cambiado la contraseña. El turno de tarde deja una nota: hoy se ejecutó el script trimestral de bajas.
-- Impacto: la aplicación no pudo iniciar sesión durante algo más de un minuto (la cuenta se bloqueó a las 00:00:07 y la desbloqueé a las 00:01:11).
-- Diagnóstico: en `20261123T000015Z_08-diagnostico`, la sección 7 daba APP_ACADEMIA en estado LOCKED desde las 00:00, con perfil DEFAULT (10 intentos permitidos). Era LOCKED a secas, no LOCKED(TIMED): no se bloqueó por contraseñas erróneas, que es lo que le pasó a Ana en la Parte G, sino porque alguien hizo ACCOUNT LOCK. Para confirmarlo miré la auditoría unificada (`*_08-auditoria-inc603`): `ALTER USER app_academia ACCOUNT LOCK`, ejecutado por SYS desde sqlplus a las 00:00:07.
-- Causa raíz: el script de bajas no distingue entre cuentas de personas y cuentas de aplicación, y bloqueó la cuenta de la aplicación como si fuera la de alguien que se ha ido. Que la cuenta estuviera bloqueada es el síntoma; la causa es el criterio del script.
-- Intervención: `ALTER USER app_academia ACCOUNT UNLOCK;` como SYSDBA en FREEPDB1 (`*_08-inc603-intervencion`). Solo desbloquear: la contraseña no había cambiado ni se había filtrado, así que no hacía falta tocarla, ni tampoco los privilegios.
-- Validación: en `20261123T000113Z_08-diagnostico` la sección 7 ya no muestra ninguna cuenta bloqueada y la aplicación vuelve a entrar con `app.sh`.
-- Acción preventiva: que el script de bajas solo actúe sobre cuentas nominales (por ejemplo, las que tienen el perfil PRF_PERSONAS) y nunca sobre cuentas de aplicación; darle a APP_ACADEMIA un perfil propio de aplicaciones para poder excluirlo por perfil; y que el script saque la lista de cuentas que va a bloquear y alguien la revise antes de ejecutarlo.
+- Detección: 00:00 UTC. Matrículas dice que la aplicación da ORA-28000 y que no han cambiado la contraseña. El turno de tarde dice que hoy se ejecutó el script de bajas.
+- Impacto: la aplicación no pudo entrar durante aproximadamente un minuto.
+- Diagnóstico: en la sección 7, APP_ACADEMIA salía en LOCKED, no en LOCKED(TIMED), y su perfil DEFAULT permite 10 intentos. Así que no se bloqueó por fallos de contraseña sino porque alguien hizo ACCOUNT LOCK. En la auditoría salió que SYS ejecutó ALTER USER app_academia ACCOUNT LOCK a las 00:00:07 desde sqlplus.
+- Causa raíz: el script de bajas no distingue entre cuentas de personas y cuentas de aplicación, y bloqueó la de la aplicación.
+- Intervención: ALTER USER app_academia ACCOUNT UNLOCK. No cambié la contraseña porque no hacía falta.
+- Validación: la sección 7 ya no sale con ninguna cuenta y la aplicación entra con app.sh.
+- Acción preventiva: que el script de bajas solo bloquee cuentas de personas (por ejemplo las de PRF_PERSONAS) y que alguien revise la lista antes de lanzarlo.

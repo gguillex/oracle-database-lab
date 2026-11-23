@@ -31,3 +31,15 @@ ayudame a ordenar los postmortems de la guardia con la plantilla del lab (detecc
 - **Propósito (para qué lo necesitaba):** pasar las notas que tomé durante los tres incidentes a los siete campos de la plantilla del postmortem
 - **Qué hace (con mis palabras; línea a línea si es SQL corto):** no es código. Me ayudó a colocar en cada campo lo que había anotado. Las horas, los SID, las sentencias y los valores son los de mis evidencias `*_08-*`.
 - **Evidencia de ejecución (archivo de docs/bitacora/lab6/evidencia con mi cabecera):** no aplica
+
+## Entrada 3
+- **Herramienta:** Claude
+- **Prompt (literal, copiado tal cual):**
+```text
+revisame la ortografia y la redaccion de estas respuestas sin cambiar las cifras
+```
+- **Código recibido (el fragmento, o la ruta del archivo donde está):** no aplica
+- **Dónde lo usé (parte, script o pregunta):** docs/bitacora/lab6-respuestas.md (Parte J.2)
+- **Propósito (para qué lo necesitaba):** corregir tildes y frases de las respuestas antes de entregarlas
+- **Qué hace (con mis palabras; línea a línea si es SQL corto):** no es código. Corrigió la ortografía y algunas frases; el contenido y los números son los de mis ejecuciones, con el archivo de evidencia de donde salen.
+- **Evidencia de ejecución (archivo de docs/bitacora/lab6/evidencia con mi cabecera):** no aplica
